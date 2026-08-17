@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MINI AI</title>
+<style>
+:root {
+  --bg:#111315; --panel:#1c1f23; --panel2:#24282d; --text:#f4f6f8;
+  --muted:#aab1b8; --border:#343a40; --accent:#7c5cff;
+}
+* { box-sizing:border-box; }
+body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+.app { width:min(1100px,100%); margin:auto; min-height:100vh; display:flex; flex-direction:column; }
+header { display:flex; align-items:center; gap:14px; padding:18px 20px; }
+.logo { font-size:30px; font-weight:800; }
+.actions { margin-left:auto; display:flex; gap:8px; }
+button { border:1px solid var(--border); background:var(--panel2); color:var(--text);
+  border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:600; }
+button:hover { border-color:#555d66; }
+.chat { flex:1; padding:8px 20px 16px; overflow:auto; }
+.msg { padding:14px 16px; margin:10px 0; border:1px solid var(--border);
+  border-radius:16px; background:var(--panel); white-space:pre-wrap; }
+.msg.you { background:#171a1e; }
+.search { display:flex; gap:8px; padding:8px 20px; }
+input { width:100%; border:1px solid var(--border); outline:none; border-radius:13px;
+  background:var(--panel); color:var(--text); padding:13px 15px; font-size:16px; }
+.quick { display:flex; gap:8px; overflow:auto; padding:6px 20px 10px; }
+.quick button { white-space:nowrap; }
+.bottom { display:flex; gap:8px; padding:10px 20px 20px; padding-bottom:max(20px,env(safe-area-inset-bottom)); }
+.hint { color:var(--muted); font-size:13px; padding:0 20px 8px; }
+@media (max-width:600px) {
+  header { padding:14px; }
+  .logo { font-size:25px; }
+  .chat,.search,.quick,.bottom,.hint { padding-left:12px; padding-right:12px; }
+  header button { padding:8px 10px; }
+  .bottom { position:sticky; bottom:0; background:var(--bg); }
+}
+body.light { --bg:#f4f6f8; --panel:#fff; --panel2:#eef1f4; --text:#15171a;
+  --muted:#66707a; --border:#d5d9de; --accent:#6346e8; }
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">🤖 MINI AI</div>
+  <div class="actions">
+    <button onclick="newChat()">New Chat</button>
+    <button onclick="toggleTheme()">Theme</button>
+  </div>
+</header>
+
+<div id="chat" class="chat"></div>
+
+<div class="hint">Գրիր կայքի անունը կամ հրաման, օրինակ՝ «բացիր Google»</div>
+<div class="search">
+  <input id="siteSearch" placeholder="🔎 Գտնել կայք..." autocomplete="off">
+  <button onclick="findAndOpen()">Բացել</button>
+</div>
+
+<div class="quick">
+  <button onclick="openSite('Google')">Google</button>
+  <button onclick="openSite('YouTube')">YouTube</button>
+  <button onclick="openSite('ChatGPT')">ChatGPT</button>
+  <button onclick="openSite('GitHub')">GitHub</button>
+  <button onclick="openSite('Instagram')">Instagram</button>
+  <button onclick="openSite('Wikipedia')">Wikipedia</button>
+</div>
+
+<div class="bottom">
+  <input id="message" placeholder="Բարև, գրիր ինձ ինչ կցանկանաս" autocomplete="off">
+  <button onclick="send()">Ուղարկել</button>
+</div>
+</div>
+
+<script>
+const SITES = {"Elstar": "https://elstar.am", "YouTube": "https://www.youtube.com", "Facebook": "https://www.facebook.com", "Instagram": "https://www.instagram.com", "TikTok": "https://www.tiktok.com", "X": "https://x.com", "Wikipedia": "https://www.wikipedia.org", "Reddit": "https://www.reddit.com", "Amazon": "https://www.amazon.com", "Netflix": "https://www.netflix.com", "Spotify": "https://open.spotify.com", "eBay": "https://www.ebay.com", "LinkedIn": "https://www.linkedin.com", "Bing": "https://www.bing.com", "Yahoo": "https://www.yahoo.com", "Twitch": "https://www.twitch.tv", "Pinterest": "https://www.pinterest.com", "Discord": "https://discord.com", "WhatsApp": "https://web.whatsapp.com", "Telegram": "https://web.telegram.org", "GitHub": "https://github.com", "Stack Overflow": "https://stackoverflow.com", "Quora": "https://www.quora.com", "Medium": "https://medium.com", "Apple": "https://www.apple.com", "Microsoft": "https://www.microsoft.com", "Adobe": "https://www.adobe.com", "Canva": "https://www.canva.com", "OpenAI": "https://openai.com", "DuckDuckGo": "https://duckduckgo.com", "Yandex": "https://yandex.com", "AliExpress": "https://www.aliexpress.com", "Walmart": "https://www.walmart.com", "IMDb": "https://www.imdb.com", "SoundCloud": "https://soundcloud.com", "Vimeo": "https://vimeo.com", "WordPress": "https://wordpress.com", "Blogger": "https://www.blogger.com", "Tert": "https://tert.am", "News": "https://news.am", "Police.am": "https://www.police.am", "Idram": "https://www.idram.am", "List.am": "https://www.list.am", "Ucom": "https://www.ucom.am", "Temu": "https://www.temu.com", "Iberia": "https://www.iberia.com", "IKEA": "https://www.ikea.com", "Nike": "https://www.nike.com", "Puma": "https://www.puma.com", "ChatGPT": "https://chatgpt.com", "Hisense": "https://www.hisense.com", "JBL": "https://www.jbl.com", "Google": "https://www.google.com", "Gmail": "https://mail.google.com", "Google Drive": "https://drive.google.com", "Google Maps": "https://maps.google.com", "Google Translate": "https://translate.google.com", "Google Photos": "https://photos.google.com", "Google Docs": "https://docs.google.com", "Google Sheets": "https://sheets.google.com", "Google Meet": "https://meet.google.com", "Google Calendar": "https://calendar.google.com", "Zoom": "https://zoom.us", "Dropbox": "https://www.dropbox.com", "OneDrive": "https://onedrive.live.com", "Outlook": "https://outlook.live.com", "Office": "https://www.office.com", "Teams": "https://teams.microsoft.com", "GitLab": "https://gitlab.com", "Bitbucket": "https://bitbucket.org", "NPM": "https://www.npmjs.com", "PyPI": "https://pypi.org", "Python": "https://www.python.org", "Java": "https://www.java.com", "Mozilla": "https://www.mozilla.org", "Firefox": "https://www.mozilla.org/firefox", "Opera": "https://www.opera.com", "Brave": "https://brave.com", "Samsung": "https://www.samsung.com", "Xiaomi": "https://www.mi.com", "Lenovo": "https://www.lenovo.com", "ASUS": "https://www.asus.com", "Acer": "https://www.acer.com", "Dell": "https://www.dell.com", "HP": "https://www.hp.com", "Sony": "https://www.sony.com", "LG": "https://www.lg.com", "Panasonic": "https://www.panasonic.com", "Philips": "https://www.philips.com", "Bosch": "https://www.bosch.com", "Booking": "https://www.booking.com", "Airbnb": "https://www.airbnb.com", "Tripadvisor": "https://www.tripadvisor.com", "Skyscanner": "https://www.skyscanner.net", "Expedia": "https://www.expedia.com", "Trip.com": "https://www.trip.com", "Wizz Air": "https://wizzair.com", "Ryanair": "https://www.ryanair.com", "Coursera": "https://www.coursera.org", "edX": "https://www.edx.org", "Khan Academy": "https://www.khanacademy.org", "Duolingo": "https://www.duolingo.com", "Udemy": "https://www.udemy.com", "Skillshare": "https://www.skillshare.com", "freeCodeCamp": "https://www.freecodecamp.org", "Codecademy": "https://www.codecademy.com", "W3Schools": "https://www.w3schools.com", "GeeksforGeeks": "https://www.geeksforgeeks.org", "Hugging Face": "https://huggingface.co", "Kaggle": "https://www.kaggle.com", "arXiv": "https://arxiv.org", "ResearchGate": "https://www.researchgate.net", "Crunchbase": "https://www.crunchbase.com", "TechCrunch": "https://techcrunch.com", "The Verge": "https://www.theverge.com", "WIRED": "https://www.wired.com", "Engadget": "https://www.engadget.com", "Product Hunt": "https://www.producthunt.com", "Dribbble": "https://dribbble.com", "Behance": "https://www.behance.net", "DeviantArt": "https://www.deviantart.com", "Figma": "https://www.figma.com", "Notion": "https://www.notion.so", "Trello": "https://trello.com", "Asana": "https://asana.com", "Slack": "https://slack.com", "ClickUp": "https://clickup.com", "Evernote": "https://evernote.com", "Todoist": "https://todoist.com", "Proton": "https://proton.me", "Proton Mail": "https://mail.proton.me", "Signal": "https://signal.org", "Viber": "https://www.viber.com", "Snapchat": "https://www.snapchat.com", "Weibo": "https://weibo.com", "WeChat": "https://www.wechat.com", "VK": "https://vk.com", "Tumblr": "https://www.tumblr.com", "Flickr": "https://www.flickr.com", "Dailymotion": "https://www.dailymotion.com", "Internet Archive": "https://archive.org", "Goodreads": "https://www.goodreads.com", "Rotten Tomatoes": "https://www.rottentomatoes.com", "Hulu": "https://www.hulu.com", "Disney+": "https://www.disneyplus.com", "Prime Video": "https://www.primevideo.com", "HBO Max": "https://www.hbomax.com", "Paramount+": "https://www.paramountplus.com", "Peacock": "https://www.peacocktv.com", "SoundOn": "https://www.soundon.global", "Bandcamp": "https://bandcamp.com", "Deezer": "https://www.deezer.com", "Tidal": "https://tidal.com", "Pandora": "https://www.pandora.com", "Last.fm": "https://www.last.fm", "Mixcloud": "https://www.mixcloud.com", "Shazam": "https://www.shazam.com", "Genius": "https://genius.com", "Letterboxd": "https://letterboxd.com", "Steam": "https://store.steampowered.com", "Epic Games": "https://store.epicgames.com", "PlayStation": "https://www.playstation.com", "Xbox": "https://www.xbox.com", "Nintendo": "https://www.nintendo.com", "Roblox": "https://www.roblox.com", "Minecraft": "https://www.minecraft.net", "EA": "https://www.ea.com", "Ubisoft": "https://www.ubisoft.com", "Rockstar Games": "https://www.rockstargames.com", "IGN": "https://www.ign.com", "GameSpot": "https://www.gamespot.com", "Metacritic": "https://www.metacritic.com", "Etsy": "https://www.etsy.com", "Shopify": "https://www.shopify.com", "Best Buy": "https://www.bestbuy.com", "Target": "https://www.target.com", "Costco": "https://www.costco.com", "Home Depot": "https://www.homedepot.com", "Lowe's": "https://www.lowes.com", "Wayfair": "https://www.wayfair.com", "Alibaba": "https://www.alibaba.com", "Rakuten": "https://www.rakuten.com", "Newegg": "https://www.newegg.com", "PayPal": "https://www.paypal.com", "Stripe": "https://stripe.com", "Wise": "https://wise.com", "Western Union": "https://www.westernunion.com", "Coinbase": "https://www.coinbase.com", "Binance": "https://www.binance.com", "ADP": "https://www.adp.com", "Indeed": "https://www.indeed.com", "Glassdoor": "https://www.glassdoor.com", "ZipRecruiter": "https://www.ziprecruiter.com", "Monster": "https://www.monster.com", "MasterClass": "https://www.masterclass.com", "Brilliant": "https://brilliant.org", "Pluralsight": "https://www.pluralsight.com", "LinkedIn Learning": "https://www.linkedin.com/learning", "Merriam-Webster": "https://www.merriam-webster.com", "Stack Exchange": "https://stackexchange.com", "MDN": "https://developer.mozilla.org", "Docker": "https://www.docker.com", "Kotlin": "https://kotlinlang.org", "Rust": "https://www.rust-lang.org", "Go": "https://go.dev", "Node.js": "https://nodejs.org", "React": "https://react.dev", "Vue": "https://vuejs.org", "Svelte": "https://svelte.dev", "Vercel": "https://vercel.com", "Netlify": "https://www.netlify.com", "Heroku": "https://www.heroku.com", "Firebase": "https://firebase.google.com", "Cloudflare": "https://www.cloudflare.com", "AWS": "https://aws.amazon.com", "Google Cloud": "https://cloud.google.com", "Azure": "https://azure.microsoft.com", "Freepik": "https://www.freepik.com", "Unsplash": "https://unsplash.com", "Pexels": "https://www.pexels.com", "Pixabay": "https://pixabay.com", "Giphy": "https://giphy.com", "Imgur": "https://imgur.com", "BBC": "https://www.bbc.com", "CNN": "https://www.cnn.com", "Reuters": "https://www.reuters.com", "The Guardian": "https://www.theguardian.com", "Forbes": "https://www.forbes.com", "NASA": "https://www.nasa.gov", "National Geographic": "https://www.nationalgeographic.com", "Weather.com": "https://weather.com", "Google News": "https://news.google.com"};
+
+const chat = document.getElementById("chat");
+const message = document.getElementById("message");
+const siteSearch = document.getElementById("siteSearch");
+
+function addMessage(who, text, you=false) {
+  const div = document.createElement("div");
+  div.className = "msg" + (you ? " you" : "");
+  div.textContent = who + ": " + text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function normalize(s) {
+  return s.toLowerCase().trim()
+    .replace(/^բացիր\s+/,"")
+    .replace(/^բացել\s+/,"")
+    .replace(/^open\s+/,"");
+}
+
+function findSite(query) {
+  const q = normalize(query);
+  const names = Object.keys(SITES);
+  const exact = names.find(n => n.toLowerCase() === q);
+  if (exact) return exact;
+  const partial = names.find(n => n.toLowerCase().includes(q) || q.includes(n.toLowerCase()));
+  if (partial) return partial;
+
+  // Simple fuzzy match.
+  let best = null, bestScore = 0;
+  for (const n of names) {
+    const a = q, b = n.toLowerCase();
+    let same = 0;
+    for (const ch of new Set(a)) if (b.includes(ch)) same++;
+    const score = same / Math.max(1, new Set(a).size);
+    if (score > bestScore) { bestScore = score; best = n; }
+  }
+  return bestScore >= 0.55 ? best : null;
+}
+
+function openSite(name) {
+  if (!SITES[name]) return;
+  addMessage("MINI AI", "Բացում եմ " + name + " 🌐");
+  window.open(SITES[name], "_blank", "noopener,noreferrer");
+}
+
+function findAndOpen() {
+  const q = siteSearch.value.trim();
+  if (!q) return;
+  const site = findSite(q);
+  if (site) openSite(site);
+  else addMessage("MINI AI", "Այդ անունով կայք չգտա։ Փորձիր օրինակ՝ Google կամ YouTube։");
+}
+
+function send() {
+  const q = message.value.trim();
+  if (!q) return;
+  message.value = "";
+  addMessage("Դու", q, true);
+
+  const low = q.toLowerCase();
+  if (low.startsWith("բացիր ") || low.startsWith("բացել ") || low.startsWith("open ")) {
+    const site = findSite(q);
+    if (site) openSite(site);
+    else addMessage("MINI AI", "Կայքը չգտա։");
+  } else if (low.includes("քանի կայք")) {
+    addMessage("MINI AI", "Իմ մեջ կա " + Object.keys(SITES).length + " կայք 🌐");
+  } else if (low.includes("ժամ")) {
+    addMessage("MINI AI", "Հիմա ժամը " + new Date().toLocaleTimeString("hy-AM") + " է։");
+  } else if (low.includes("բարև") || low.includes("բարեւ") || low.includes("barev") || low.includes("hello")) {
+    addMessage("MINI AI", "Բարև 👋 Գրիր ինձ ինչ կցանկանաս։");
+  } else {
+    addMessage("MINI AI", "Հասկացա 👍 Այս տարբերակում կարող եմ կայքեր գտնել ու բացել և կատարել պարզ հրամաններ։");
+  }
+}
+
+function newChat() {
+  chat.innerHTML = "";
+  addMessage("MINI AI", "Բարև, գրիր ինձ ինչ կցանկանաս");
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("light");
+}
+
+message.addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+siteSearch.addEventListener("keydown", e => { if (e.key === "Enter") findAndOpen(); });
+
+newChat();
+</script>
+</body>
+</html>
