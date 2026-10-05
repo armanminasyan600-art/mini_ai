@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini.AI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{height:100vh;background:#0b0f19;color:white;display:flex;overflow:hidden;transition:.2s}
+button{font-family:inherit}
+
+/* SIDEBAR */
+.sidebar{width:260px;background:#111827;border-right:1px solid #263044;padding:22px;display:flex;flex-direction:column;gap:10px}
+.logo{font-size:27px;font-weight:bold;margin-bottom:10px}
+.new-chat{width:100%;padding:14px;border:none;border-radius:12px;background:#2563eb;color:white;font-size:15px;cursor:pointer}
+.new-chat:hover{background:#1d4ed8}
+.h-label{font-size:13px;color:#94a3b8;margin-top:6px}
+.history{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.h-item{display:flex;align-items:center;border-radius:10px}
+.h-item:hover,.h-item.on{background:#1e293b}
+.h-title{flex:1;min-width:0;text-align:left;background:none;border:none;color:inherit;padding:10px;font-size:14px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h-del{background:none;border:none;cursor:pointer;padding:8px;font-size:15px;opacity:.7}
+.h-del:hover{opacity:1}
+.empty{font-size:13px;color:#64748b;padding:6px 4px}
+.user-label{font-size:14px;color:#94a3b8;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settings-button{width:100%;padding:13px;border:1px solid #334155;border-radius:12px;background:transparent;color:#cbd5e1;cursor:pointer;font-size:15px}
+.settings-button:hover{background:#1e293b}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.header{height:68px;border-bottom:1px solid #263044}
+.chat{flex:1;overflow-y:auto;padding:30px 20px}
+.welcome{text-align:center;margin-top:100px}
+.welcome h1{font-size:40px;margin-bottom:15px}
+.welcome p{color:#94a3b8;font-size:17px}
+.message{max-width:850px;margin:18px auto;padding:16px 20px;border-radius:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.user{background:#2563eb}
+.ai{background:#1e293b}
+
+/* INPUT */
+.input-area{border-top:1px solid #263044;padding:18px}
+.input-box{max-width:950px;margin:auto;display:flex;gap:10px}
+input{flex:1;min-width:0;padding:17px;border-radius:13px;border:1px solid #334155;background:#111827;color:white;outline:none;font-size:16px}
+input:focus{border-color:#2563eb}
+.send{width:65px;border:none;border-radius:13px;background:#2563eb;color:white;font-size:21px;cursor:pointer}
+.send:hover{background:#1d4ed8}
+
+/* MODALS */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.modal.active{display:flex}
+.modal-box{width:100%;max-width:440px;max-height:100%;overflow-y:auto;background:#111827;border:1px solid #334155;border-radius:18px;padding:25px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.modal-header h2{font-size:23px}
+.close{width:42px;height:42px;border:none;border-radius:10px;background:#1e293b;color:white;font-size:28px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.close:hover{background:#ef4444}
+.setting-item{margin-bottom:23px}
+.setting-item label{display:block;color:#cbd5e1;margin-bottom:9px;font-size:16px}
+select{width:100%;padding:13px;border-radius:10px;border:1px solid #334155;background:#0b0f19;color:white;font-size:15px;outline:none}
+.primary{width:100%;padding:13px;border:none;border-radius:10px;background:#2563eb;color:white;font-size:15px;cursor:pointer}
+.primary:hover{background:#1d4ed8}
+.secondary{width:100%;padding:13px;border:1px solid #334155;border-radius:10px;background:transparent;color:#cbd5e1;font-size:15px;cursor:pointer}
+.secondary:hover{background:#1e293b}
+.row{display:flex;gap:10px}
+.hello{margin-bottom:12px;font-size:16px;color:#cbd5e1}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tab{flex:1;padding:11px;border:1px solid #334155;border-radius:10px;background:transparent;color:#cbd5e1;cursor:pointer;font-size:15px}
+.tab.on{background:#2563eb;border-color:#2563eb;color:white}
+.field{margin-bottom:14px}
+.field input{width:100%;padding:13px;font-size:15px;border-radius:10px;background:#0b0f19}
+.err{color:#f87171;font-size:14px;min-height:20px;margin-bottom:10px}
+
+/* TOGGLE */
+.toggle{width:62px;height:34px;border-radius:20px;border:none;background:#475569;cursor:pointer;position:relative;transition:.2s}
+.toggle::after{content:"";width:26px;height:26px;background:white;border-radius:50%;position:absolute;top:4px;left:4px;transition:.2s}
+.toggle.on{background:#2563eb}
+.toggle.on::after{left:32px}
+
+/* LIGHT MODE */
+body.light{background:#f1f5f9;color:#0f172a}
+body.light .sidebar{background:white;border-color:#cbd5e1}
+body.light .header,body.light .input-area{border-color:#cbd5e1}
+body.light input,body.light .field input{background:white;color:#0f172a;border-color:#cbd5e1}
+body.light .ai{background:#e2e8f0;color:#0f172a}
+body.light .user{color:white}
+body.light .modal-box{background:white;color:#0f172a;border-color:#cbd5e1}
+body.light .close{background:#e2e8f0;color:#0f172a}
+body.light select{background:white;color:#0f172a;border-color:#cbd5e1}
+body.light .setting-item label,body.light .hello{color:#334155}
+body.light .secondary,body.light .settings-button,body.light .tab{color:#334155;border-color:#cbd5e1}
+body.light .tab.on{color:white;border-color:#2563eb}
+body.light .welcome p,body.light .user-label,body.light .h-label{color:#64748b}
+body.light .h-item:hover,body.light .h-item.on{background:#e2e8f0}
+
+/* MOBILE */
+@media (max-width:700px){
+.sidebar{width:180px;padding:15px}
+.logo{font-size:21px}
+.new-chat,.settings-button{font-size:13px}
+.welcome{margin-top:70px}
+.welcome h1{font-size:28px}
+.chat{padding:15px 10px}
+.input-area{padding:12px}
+.send{width:55px}}
+@media (max-width:480px){.sidebar{width:145px}.logo{font-size:18px}}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div class="logo">🤖 Mini.AI</div>
+    <button class="new-chat" onclick="newChat()" data-i="newChat"></button>
+    <div class="h-label" data-i="history"></div>
+    <div class="history" id="history"></div>
+    <div class="user-label" id="userLabel"></div>
+    <button class="settings-button" onclick="openModal('settings')" data-i="settings"></button>
+</aside>
+
+<main class="main">
+    <header class="header"></header>
+
+    <section class="chat" id="chat">
+        <div class="welcome" id="welcome">
+            <h1 data-i="welcomeH"></h1>
+            <p data-i="welcomeP"></p>
+        </div>
+    </section>
+
+    <div class="input-area">
+        <div class="input-box">
+            <input id="messageInput" type="text" onkeydown="handleKey(event)">
+            <button class="send" onclick="sendMessage()" aria-label="Send">➤</button>
+        </div>
+    </div>
+</main>
+
+<!-- SETTINGS -->
+<div class="modal" id="settings">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 data-i="settings"></h2>
+            <button class="close" onclick="closeModal('settings')" aria-label="Close">×</button>
+        </div>
+
+        <div class="setting-item">
+            <label data-i="account"></label>
+            <div id="accountBox"></div>
+        </div>
+
+        <div class="setting-item">
+            <label for="language" data-i="language"></label>
+            <select id="language" onchange="setLang(this.value)">
+                <option value="hy">Հայերեն</option>
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+            </select>
+        </div>
+
+        <div class="setting-item">
+            <label data-i="theme"></label>
+            <button class="toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Theme"></button>
+        </div>
+    </div>
+</div>
+
+<!-- LOGIN / SIGN UP -->
+<div class="modal" id="auth">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 id="authTitle"></h2>
+            <button class="close" onclick="closeModal('auth')" aria-label="Close">×</button>
+        </div>
+        <div class="tabs">
+            <button class="tab" id="tabLogin" onclick="setMode('login')" data-i="login"></button>
+            <button class="tab" id="tabSignup" onclick="setMode('signup')" data-i="signup"></button>
+        </div>
+        <div class="field"><input id="authUser" type="text" autocomplete="username"></div>
+        <div class="field"><input id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()"></div>
+        <div class="err" id="authErr"></div>
+        <button class="primary" id="authSubmit" onclick="submitAuth()"></button>
+    </div>
+</div>
+
+<script>
+/* ---------- TRANSLATIONS (menu only) ---------- */
+const T = {
+  hy: {
+    newChat:"+ Նոր չատ", settings:"⚙️ Կարգավորումներ", language:"🌐 Լեզու", theme:"🌙 Մութ / Լույս",
+    history:"Պատմություն", empty:"Դեռ չատեր չկան", del:"Ջնջել",
+    welcomeH:"Ինչպե՞ս կարող եմ օգնել 🤖", welcomeP:"Հարցրու Mini.AI-ին ցանկացած բան։",
+    ph:"Գրիր հաղորդագրություն Mini.AI-ին...", account:"👤 Հաշիվ",
+    login:"Մուտք", signup:"Գրանցվել", logout:"Դուրս գալ", guest:"Դու դեռ մուտք չես գործել։",
+    hello:"Բարև, ", userPh:"Օգտանուն", passPh:"Գաղտնաբառ",
+    errEmpty:"Լրացրու բոլոր դաշտերը։", errShort:"Գաղտնաբառը պետք է լինի առնվազն 4 նիշ։",
+    errTaken:"Այս օգտանունը զբաղված է։", errBad:"Սխալ օգտանուն կամ գաղտնաբառ։"
+  },
+  en: {
+    newChat:"+ New Chat", settings:"⚙️ Settings", language:"🌐 Language", theme:"🌙 Dark / Light",
+    history:"History", empty:"No chats yet", del:"Delete",
+    welcomeH:"How can I help? 🤖", welcomeP:"Ask Mini.AI anything.",
+    ph:"Message Mini.AI...", account:"👤 Account",
+    login:"Log in", signup:"Sign up", logout:"Log out", guest:"You are not logged in.",
+    hello:"Hello, ", userPh:"Username", passPh:"Password",
+    errEmpty:"Fill in all fields.", errShort:"Password must be at least 4 characters.",
+    errTaken:"This username is already taken.", errBad:"Wrong username or password."
+  },
+  ru: {
+    newChat:"+ Новый чат", settings:"⚙️ Настройки", language:"🌐 Язык", theme:"🌙 Тёмная / Светлая",
+    history:"История", empty:"Пока нет чатов", del:"Удалить",
+    welcomeH:"Чем могу помочь? 🤖", welcomeP:"Спросите Mini.AI о чём угодно.",
+    ph:"Сообщение Mini.AI...", account:"👤 Аккаунт",
+    login:"Войти", signup:"Регистрация", logout:"Выйти", guest:"Вы ещё не вошли.",
+    hello:"Привет, ", userPh:"Имя пользователя", passPh:"Пароль",
+    errEmpty:"Заполните все поля.", errShort:"Пароль должен быть не короче 4 символов.",
+    errTaken:"Это имя уже занято.", errBad:"Неверное имя или пароль."
+  }
+};
+
+/* ---------- STORAGE (safe) ---------- */
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+
+let lang = store.get("mini_lang") || "hy";
+if (!T[lang]) lang = "hy";
+let currentUser = store.get("mini_current") || null;
+let authMode = "login";
+let chats = [], curId = null;
+
+const t = k => T[lang][k];
+const $ = id => document.getElementById(id);
+
+/* ---------- LANGUAGE ---------- */
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
+  $("messageInput").placeholder = t("ph");
+  $("language").value = lang;
+  $("authUser").placeholder = t("userPh");
+  $("authPass").placeholder = t("passPh");
+  setMode(authMode);
+  renderAccount();
+  renderHistory();
+}
+
+function setLang(l) {
+  lang = l;
+  store.set("mini_lang", l);
+  applyLang();
+}
+
+/* ---------- THEME ---------- */
+function applyTheme(light) {
+  document.body.classList.toggle("light", light);
+  $("themeToggle").classList.toggle("on", light);
+}
+function toggleTheme() {
+  const light = !document.body.classList.contains("light");
+  applyTheme(light);
+  store.set("mini_theme", light ? "light" : "dark");
+}
+
+/* ---------- MODALS ---------- */
+function openModal(id) { $(id).classList.add("active"); }
+function closeModal(id) { $(id).classList.remove("active"); }
+["settings","auth"].forEach(id =>
+  $(id).addEventListener("click", e => { if (e.target === $(id)) closeModal(id); })
+);
+
+/* ---------- ACCOUNTS (saved in this browser only) ---------- */
+function getUsers() {
+  try { return JSON.parse(store.get("mini_users") || "{}"); } catch(e) { return {}; }
+}
+
+async function hash(text) {
+  if (window.crypto && crypto.subtle) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("mini.ai:" + text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+  }
+  let h = 0;
+  for (const c of "mini.ai:" + text) h = (h * 31 + c.charCodeAt(0)) | 0;
+  return String(h);
+}
+
+function renderAccount() {
+  const box = $("accountBox");
+  box.innerHTML = "";
+  if (currentUser) {
+    const hello = document.createElement("div");
+    hello.className = "hello";
+    hello.textContent = t("hello") + currentUser;
+    const out = document.createElement("button");
+    out.className = "secondary";
+    out.textContent = t("logout");
+    out.onclick = logout;
+    box.append(hello, out);
+    $("userLabel").textContent = "👤 " + currentUser;
+  } else {
+    const hello = document.createElement("div");
+    hello.className = "hello";
+    hello.textContent = t("guest");
+    const row = document.createElement("div");
+    row.className = "row";
+    const a = document.createElement("button");
+    a.className = "primary"; a.textContent = t("login");
+    a.onclick = () => openAuth("login");
+    const b = document.createElement("button");
+    b.className = "secondary"; b.textContent = t("signup");
+    b.onclick = () => openAuth("signup");
+    row.append(a, b);
+    box.append(hello, row);
+    $("userLabel").textContent = "";
+  }
+}
+
+function setMode(mode) {
+  authMode = mode;
+  $("tabLogin").classList.toggle("on", mode === "login");
+  $("tabSignup").classList.toggle("on", mode === "signup");
+  $("authTitle").textContent = t(mode);
+  $("authSubmit").textContent = t(mode);
+  $("authPass").autocomplete = mode === "signup" ? "new-password" : "current-password";
+  $("authErr").textContent = "";
+}
+
+function openAuth(mode) {
+  closeModal("settings");
+  $("authUser").value = ""; $("authPass").value = "";
+  setMode(mode);
+  openModal("auth");
+  $("authUser").focus();
+}
+
+async function submitAuth() {
+  const name = $("authUser").value.trim();
+  const pass = $("authPass").value;
+  const err = $("authErr");
+  if (!name || !pass) { err.textContent = t("errEmpty"); return; }
+
+  const users = getUsers();
+  const key = name.toLowerCase();
+
+  if (authMode === "signup") {
+    if (pass.length < 4) { err.textContent = t("errShort"); return; }
+    if (users[key]) { err.textContent = t("errTaken"); return; }
+    users[key] = { name: name, pass: await hash(pass) };
+    store.set("mini_users", JSON.stringify(users));
+  } else {
+    if (!users[key] || users[key].pass !== await hash(pass)) { err.textContent = t("errBad"); return; }
+  }
+
+  currentUser = users[key].name;
+  store.set("mini_current", currentUser);
+  closeModal("auth");
+  renderAccount();
+  loadChats();
+  newChat();
+}
+
+function logout() {
+  currentUser = null;
+  store.del("mini_current");
+  renderAccount();
+  loadChats();
+  newChat();
+}
+
+/* ---------- CHAT HISTORY (each account has its own list) ---------- */
+function chatKey() { return "mini_chats_" + (currentUser ? currentUser.toLowerCase() : "guest"); }
+
+function loadChats() {
+  try { chats = JSON.parse(store.get(chatKey()) || "[]"); } catch(e) { chats = []; }
+}
+function saveChats() { store.set(chatKey(), JSON.stringify(chats)); }
+
+function renderHistory() {
+  const box = $("history");
+  box.innerHTML = "";
+  if (!chats.length) {
+    const e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = t("empty");
+    box.append(e);
+    return;
+  }
+  chats.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "h-item" + (c.id === curId ? " on" : "");
+    const b = document.createElement("button");
+    b.className = "h-title";
+    b.textContent = c.title;
+    b.onclick = () => openChat(c.id);
+    const d = document.createElement("button");
+    d.className = "h-del";
+    d.textContent = "🗑";
+    d.title = t("del");
+    d.setAttribute("aria-label", t("del"));
+    d.onclick = () => deleteChat(c.id);
+    row.append(b, d);
+    box.append(row);
+  });
+}
+
+function clearMessages() {
+  document.querySelectorAll(".message").forEach(m => m.remove());
+  const w = $("welcome");
+  if (w) w.remove();
+}
+
+function showMsg(m) {
+  const el = document.createElement("div");
+  el.className = "message " + (m.r === "user" ? "user" : "ai");
+  el.textContent = m.text;
+  $("chat").appendChild(el);
+  $("chat").scrollTop = $("chat").scrollHeight;
+}
+
+function openChat(id) {
+  const c = chats.find(x => x.id === id);
+  if (!c) return;
+  curId = id;
+  clearMessages();
+  c.msgs.forEach(showMsg);
+  renderHistory();
+}
+
+function deleteChat(id) {
+  chats = chats.filter(x => x.id !== id);
+  saveChats();
+  if (id === curId) newChat(); else renderHistory();
+}
+
+function newChat() {
+  curId = null;
+  clearMessages();
+  const w = document.createElement("div");
+  w.className = "welcome"; w.id = "welcome";
+  w.innerHTML = '<h1 data-i="welcomeH"></h1><p data-i="welcomeP"></p>';
+  $("chat").appendChild(w);
+  applyLang();
+}
+
+/* ---------- OLLAMA SETTINGS ---------- */
+const OLLAMA_URL   = "/chat";
+const OLLAMA_MODEL = "hf.co/ArmGPT/ArmenianGPT-1.0-3B:Q4_K_M";
+
+const SYSTEM_PROMPT =
+  "You are Mini.AI, a friendly assistant. " +
+  "Always answer in the language the user writes in. " +
+  "If the user writes Armenian using Latin letters, answer in Armenian letters. " +
+  "If the user writes Russian using Latin letters, answer in Russian Cyrillic. " +
+  "Keep answers clear, natural, and short. " +
+  "Do not use Markdown math, LaTeX, $$, \\boxed{}, or mathematical formatting unless the user specifically asks for it. " +
+  "For normal conversation, answer with plain text only.";
+
+const ERR = {
+  hy: "⚠️ Չհաջողվեց կապվել Ollama-ի հետ։ Համոզվիր, որ Ollama-ն միացված է և մոդելի անունը ճիշտ է։",
+  en: "⚠️ Could not reach Ollama. Make sure Ollama is running and the model name is correct.",
+  ru: "⚠️ Не удалось подключиться к Ollama. Проверь, что Ollama запущена и имя модели верное."
+};
+
+let busy = false;
+
+/* ---------- ASK OLLAMA ---------- */
+async function getAIReply(history) {
+  try {
+    const lastMessage = history[history.length - 1];
+
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: lastMessage.content
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error("HTTP " + res.status);
+    }
+
+    const data = await res.json();
+
+    return {
+      ok: true,
+      text: data.reply
+    };
+
+  } catch (e) {
+    console.error("Mini.AI error:", e);
+
+    return {
+      ok: false,
+      text: ERR[lang]
+    };
+  }
+}
+/* ---------- SEND ---------- */
+async function sendMessage() {
+  const input = $("messageInput");
+  const text = input.value.trim();
+  if (text === "" || busy) return;
+  if ($("welcome")) $("welcome").remove();
+  input.value = "";
+
+  let c = chats.find(x => x.id === curId);
+  if (!c) {
+    c = { id: Date.now(), title: text.slice(0, 28), msgs: [] };
+    chats.unshift(c);
+    curId = c.id;
+  }
+
+  const um = { r: "user", text: text };
+  c.msgs.push(um);
+  saveChats();
+  showMsg(um);
+  renderHistory();
+
+  busy = true;
+  const wait = document.createElement("div");
+  wait.className = "message ai";
+  wait.textContent = "…";
+  $("chat").appendChild(wait);
+  $("chat").scrollTop = $("chat").scrollHeight;
+
+  const history = c.msgs.slice(-20).map(m => ({
+    role: m.r === "user" ? "user" : "assistant",
+    content: m.text
+  }));
+  const r = await getAIReply(history);
+
+  if (c.id === curId) wait.textContent = r.text; else wait.remove();
+  if (r.ok) {
+    c.msgs.push({ r: "ai", text: r.text });
+    saveChats();
+  }
+  busy = false;
+  $("chat").scrollTop = $("chat").scrollHeight;
+}
+
+function handleKey(e) { if (e.key === "Enter") sendMessage(); }
+
+/* ---------- START ---------- */
+applyTheme(store.get("mini_theme") === "light");
+loadChats();
+applyLang();
+</script>
+
+</body>
+</html>
