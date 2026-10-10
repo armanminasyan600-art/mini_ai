@@ -1,96 +1,84 @@
+
 from flask import Flask, request, jsonify, send_from_directory
 import requests
-import traceback
-import re
 
 app = Flask(__name__)
 
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-MODEL = "gpt-oss:20b-cloud"
+MODEL = "gemma4:e2b"
 
-SYSTEM_PROMPT = (
-    "You are Mini.AI, a friendly assistant. "
-    "Always answer in the language the user writes in. "
-    "If the user writes Armenian using Latin letters, answer in Armenian letters. "
-    "If the user writes Russian using Latin letters, answer in Russian Cyrillic. "
-    "Keep answers clear, natural, and short. "
-    "Do not use Markdown math, LaTeX, $$, or boxed formatting unless specifically asked. "
-    "For normal conversation, use plain text."
-)
+SYSTEM_PROMPT = """
+Դու Mini.AI-ն ես՝ արագ և ճշգրիտ AI օգնական։
+Պատասխանիր օգտատիրոջ լեզվով։
+Սկզբում տուր ուղիղ պատասխանը։
+Պատասխանիր կարճ ու պարզ, եթե մանրամասն չեն խնդրել։
+Մի կրկնիր հարցը և մի հորինիր փաստեր։
+Ծրագրավորման հարցերին տուր ճիշտ, աշխատող օրինակներ։
+"""
 
 @app.route("/")
 def home():
     return send_from_directory(".", "index.html")
 
+
 @app.route("/chat", methods=["POST"])
 def chat():
+    data = request.get_json(silent=True) or {}
+    message = data.get("message", "")
+
+    if not isinstance(message, str) or not message.strip():
+        return jsonify({"error": "Գրիր հաղորդագրություն։"}), 400
+
     try:
-        data = request.get_json(silent=True) or {}
-        message = data.get("message", "").strip()
-
-        if not message:
-            return jsonify({"error": "Message is empty"}), 400
-
         response = requests.post(
             OLLAMA_URL,
             json={
                 "model": MODEL,
-                "stream": False,
                 "messages": [
-                    {
-                        "role": "system",
-                        "content": SYSTEM_PROMPT
-                    },
-                    {
-                        "role": "user",
-                        "content": message
-                    }
-                ]
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": message.strip()}
+                ],
+                "stream": False,
+                "keep_alive": -1,
+                "options": {
+                    "temperature": 0.2,
+                    "num_predict": 100,
+                    "num_ctx": 1024
+                }
             },
-            timeout=300
+            timeout=180
         )
 
-        response.raise_for_status()
+        if response.status_code != 200:
+            return jsonify({
+                "error": "Ollama-ի սխալ։ Ստուգիր մոդելը։",
+                "details": response.text[:300]
+            }), 502
 
         result = response.json()
-        reply = result["message"]["content"]
+        answer = result.get("message", {}).get("content", "").strip()
 
-        reply = re.sub(
-            r"<think>.*?</think>",
-            "",
-            reply,
-            flags=re.DOTALL | re.IGNORECASE
-        ).strip()
+        if not answer:
+            return jsonify({"error": "Պատասխան չստացվեց։"}), 502
 
-        return jsonify({"reply": reply})
+        return jsonify({"response": answer})
 
     except requests.exceptions.ConnectionError:
         return jsonify({
-            "error": "Չհաջողվեց կապվել Ollama-ի հետ։"
-        }), 500
+            "error": "Ollama-ն միացված չէ։ Բացիր Ollama-ն։"
+        }), 503
 
     except requests.exceptions.Timeout:
         return jsonify({
-            "error": "Ollama-ն շատ երկար ժամանակ չպատասխանեց։"
-        }), 500
+            "error": "Պատասխանը ուշացավ։ Փորձիր կրկին։"
+        }), 504
 
-    except Exception as e:
-        print("\n========== ERROR ==========")
-        traceback.print_exc()
-        print("===========================\n")
+    except Exception:
+        app.logger.exception("Mini.AI error")
+        return jsonify({"error": "Ներքին սխալ։ Ստուգիր CMD-ն։"}), 500
 
-        return jsonify({
-            "error": str(e)
-        }), 500
 
 if __name__ == "__main__":
-    print("Mini AI started!")
-    print("Ollama:", OLLAMA_URL)
-    print("Model:", MODEL)
-    print("Open: http://127.0.0.1:5000")
-
-    app.run(
-        host="0.0.0.0",
-        port=5000,
-        debug=True
-    )
+    print("Mini.AI-ն պատրաստ է։")
+    print("Բացիր՝ http://127.0.0.1:5000")
+    app.run(host="127.0.0.1", port=5000, debug=False)

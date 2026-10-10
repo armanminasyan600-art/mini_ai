@@ -2,551 +2,3156 @@
 <html lang="hy">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Mini.AI</title>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-body{height:100vh;background:#0b0f19;color:white;display:flex;overflow:hidden;transition:.2s}
-button{font-family:inherit}
+*{box-sizing:border-box;margin:0;padding:0}
 
-/* SIDEBAR */
-.sidebar{width:260px;background:#111827;border-right:1px solid #263044;padding:22px;display:flex;flex-direction:column;gap:10px}
-.logo{font-size:27px;font-weight:bold;margin-bottom:10px}
-.new-chat{width:100%;padding:14px;border:none;border-radius:12px;background:#2563eb;color:white;font-size:15px;cursor:pointer}
-.new-chat:hover{background:#1d4ed8}
-.h-label{font-size:13px;color:#94a3b8;margin-top:6px}
-.history{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
-.h-item{display:flex;align-items:center;border-radius:10px}
-.h-item:hover,.h-item.on{background:#1e293b}
-.h-title{flex:1;min-width:0;text-align:left;background:none;border:none;color:inherit;padding:10px;font-size:14px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.h-del{background:none;border:none;cursor:pointer;padding:8px;font-size:15px;opacity:.7}
-.h-del:hover{opacity:1}
-.empty{font-size:13px;color:#64748b;padding:6px 4px}
-.user-label{font-size:14px;color:#94a3b8;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.settings-button{width:100%;padding:13px;border:1px solid #334155;border-radius:12px;background:transparent;color:#cbd5e1;cursor:pointer;font-size:15px}
-.settings-button:hover{background:#1e293b}
+:root{
+ --bg:#05060b;
+ --panel:rgba(13,16,27,.72);
+ --panel2:rgba(20,24,39,.82);
+ --line:rgba(255,255,255,.09);
+ --text:#f8f9ff;
+ --muted:#858da6;
+ --accent:#8b5cf6;
+ --accent2:#22d3ee;
+ --danger:#ff5d73;
+ --shadow:0 30px 100px rgba(0,0,0,.45);
+}
 
-/* MAIN */
-.main{flex:1;min-width:0;display:flex;flex-direction:column}
-.header{height:68px;border-bottom:1px solid #263044}
-.chat{flex:1;overflow-y:auto;padding:30px 20px}
-.welcome{text-align:center;margin-top:100px}
-.welcome h1{font-size:40px;margin-bottom:15px}
-.welcome p{color:#94a3b8;font-size:17px}
-.message{max-width:850px;margin:18px auto;padding:16px 20px;border-radius:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
-.user{background:#2563eb}
-.ai{background:#1e293b}
+body.light{
+ --bg:#eef1f8;
+ --panel:rgba(255,255,255,.75);
+ --panel2:rgba(255,255,255,.94);
+ --line:rgba(0,0,0,.08);
+ --text:#151827;
+ --muted:#687087;
+}
 
-/* INPUT */
-.input-area{border-top:1px solid #263044;padding:18px}
-.input-box{max-width:950px;margin:auto;display:flex;gap:10px}
-input{flex:1;min-width:0;padding:17px;border-radius:13px;border:1px solid #334155;background:#111827;color:white;outline:none;font-size:16px}
-input:focus{border-color:#2563eb}
-.send{width:65px;border:none;border-radius:13px;background:#2563eb;color:white;font-size:21px;cursor:pointer}
-.send:hover{background:#1d4ed8}
+body{
+ min-height:100vh;
+ overflow:hidden;
+ background:var(--bg);
+ color:var(--text);
+ font-family:Inter,Segoe UI,Arial,sans-serif;
+}
 
-/* MODALS */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
-.modal.active{display:flex}
-.modal-box{width:100%;max-width:440px;max-height:100%;overflow-y:auto;background:#111827;border:1px solid #334155;border-radius:18px;padding:25px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.modal-header h2{font-size:23px}
-.close{width:42px;height:42px;border:none;border-radius:10px;background:#1e293b;color:white;font-size:28px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.close:hover{background:#ef4444}
-.setting-item{margin-bottom:23px}
-.setting-item label{display:block;color:#cbd5e1;margin-bottom:9px;font-size:16px}
-select{width:100%;padding:13px;border-radius:10px;border:1px solid #334155;background:#0b0f19;color:white;font-size:15px;outline:none}
-.primary{width:100%;padding:13px;border:none;border-radius:10px;background:#2563eb;color:white;font-size:15px;cursor:pointer}
-.primary:hover{background:#1d4ed8}
-.secondary{width:100%;padding:13px;border:1px solid #334155;border-radius:10px;background:transparent;color:#cbd5e1;font-size:15px;cursor:pointer}
-.secondary:hover{background:#1e293b}
-.row{display:flex;gap:10px}
-.hello{margin-bottom:12px;font-size:16px;color:#cbd5e1}
-.tabs{display:flex;gap:8px;margin-bottom:18px}
-.tab{flex:1;padding:11px;border:1px solid #334155;border-radius:10px;background:transparent;color:#cbd5e1;cursor:pointer;font-size:15px}
-.tab.on{background:#2563eb;border-color:#2563eb;color:white}
-.field{margin-bottom:14px}
-.field input{width:100%;padding:13px;font-size:15px;border-radius:10px;background:#0b0f19}
-.err{color:#f87171;font-size:14px;min-height:20px;margin-bottom:10px}
+.bg{
+ position:fixed;
+ inset:0;
+ overflow:hidden;
+ pointer-events:none;
+ z-index:-5;
+ background:
+ radial-gradient(circle at 15% 15%,rgba(139,92,246,.16),transparent 28%),
+ radial-gradient(circle at 85% 85%,rgba(34,211,238,.12),transparent 30%);
+}
 
-/* TOGGLE */
-.toggle{width:62px;height:34px;border-radius:20px;border:none;background:#475569;cursor:pointer;position:relative;transition:.2s}
-.toggle::after{content:"";width:26px;height:26px;background:white;border-radius:50%;position:absolute;top:4px;left:4px;transition:.2s}
-.toggle.on{background:#2563eb}
-.toggle.on::after{left:32px}
+.grid{
+ position:absolute;
+ inset:-50%;
+ opacity:.14;
+ background-image:
+ linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+ background-size:55px 55px;
+ transform:perspective(600px) rotateX(60deg);
+ animation:gridMove 18s linear infinite;
+}
 
-/* LIGHT MODE */
-body.light{background:#f1f5f9;color:#0f172a}
-body.light .sidebar{background:white;border-color:#cbd5e1}
-body.light .header,body.light .input-area{border-color:#cbd5e1}
-body.light input,body.light .field input{background:white;color:#0f172a;border-color:#cbd5e1}
-body.light .ai{background:#e2e8f0;color:#0f172a}
-body.light .user{color:white}
-body.light .modal-box{background:white;color:#0f172a;border-color:#cbd5e1}
-body.light .close{background:#e2e8f0;color:#0f172a}
-body.light select{background:white;color:#0f172a;border-color:#cbd5e1}
-body.light .setting-item label,body.light .hello{color:#334155}
-body.light .secondary,body.light .settings-button,body.light .tab{color:#334155;border-color:#cbd5e1}
-body.light .tab.on{color:white;border-color:#2563eb}
-body.light .welcome p,body.light .user-label,body.light .h-label{color:#64748b}
-body.light .h-item:hover,body.light .h-item.on{background:#e2e8f0}
+@keyframes gridMove{
+ to{transform:perspective(600px) rotateX(60deg) translateY(55px)}
+}
 
-/* MOBILE */
-@media (max-width:700px){
-.sidebar{width:180px;padding:15px}
-.logo{font-size:21px}
-.new-chat,.settings-button{font-size:13px}
-.welcome{margin-top:70px}
-.welcome h1{font-size:28px}
-.chat{padding:15px 10px}
-.input-area{padding:12px}
-.send{width:55px}}
-@media (max-width:480px){.sidebar{width:145px}.logo{font-size:18px}}
+.orb{
+ position:absolute;
+ border-radius:50%;
+ filter:blur(90px);
+ opacity:.32;
+ animation:float 12s ease-in-out infinite alternate;
+}
+
+.orb1{
+ width:420px;
+ height:420px;
+ background:#713cff;
+ left:-150px;
+ top:-150px;
+}
+
+.orb2{
+ width:380px;
+ height:380px;
+ background:#00cfff;
+ right:-130px;
+ bottom:-140px;
+ animation-delay:-4s;
+}
+
+.orb3{
+ width:250px;
+ height:250px;
+ background:#e83cff;
+ left:45%;
+ top:40%;
+ animation-delay:-7s;
+}
+
+@keyframes float{
+ to{transform:translate(70px,-50px) scale(1.12)}
+}
+
+body.no-effects .grid,
+body.no-effects .orb{
+ animation:none;
+}
+
+body.no-effects .orb{
+ opacity:.12;
+}
+
+body.no-animations *,
+body.no-animations *::before,
+body.no-animations *::after{
+ animation:none!important;
+ transition:none!important;
+}
+
+.app{
+ width:100vw;
+ height:100vh;
+ padding:13px;
+ display:flex;
+ gap:13px;
+}
+
+.sidebar{
+ width:275px;
+ flex-shrink:0;
+ display:flex;
+ flex-direction:column;
+ padding:18px;
+ border:1px solid var(--line);
+ border-radius:27px;
+ background:var(--panel);
+ backdrop-filter:blur(30px);
+ -webkit-backdrop-filter:blur(30px);
+ box-shadow:var(--shadow);
+ transition:.35s cubic-bezier(.2,.8,.2,1);
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ margin-bottom:24px;
+}
+
+.logo{
+ width:48px;
+ height:48px;
+ border-radius:15px;
+ overflow:hidden;
+ display:grid;
+ place-items:center;
+ color:white;
+ background:linear-gradient(135deg,var(--accent),var(--accent2));
+ box-shadow:0 8px 22px rgba(124,92,255,.28);
+
+}
+
+.logo .mini-logo-svg{
+ animation:none;
+}
+
+.logo-mark{
+ display:inline-block;
+ width:34px;
+ height:34px;
+
+
+}
+
+@keyframes logoPulse{
+ 50%{transform:scale(1.06) rotate(2deg)}
+}
+
+.brand h1{
+ font-size:20px;
+}
+
+.brand small{
+ display:block;
+ color:var(--muted);
+ font-size:10px;
+ margin-top:3px;
+}
+
+.new-chat{
+ border:0;
+ color:white;
+ cursor:pointer;
+ padding:14px;
+ border-radius:16px;
+ font-weight:700;
+ background:linear-gradient(135deg,var(--accent),var(--accent2));
+ box-shadow:0 12px 30px rgba(100,80,255,.25);
+ transition:.25s;
+}
+
+.new-chat:hover{
+ transform:translateY(-3px);
+ box-shadow:0 17px 40px rgba(100,80,255,.4);
+}
+
+.history-section{
+ margin-top:20px;
+ flex:1;
+ min-height:0;
+ overflow:hidden;
+}
+
+.history-title{
+ color:var(--muted);
+ font-size:11px;
+ text-transform:uppercase;
+ letter-spacing:1px;
+ margin-bottom:9px;
+}
+
+#historyList{
+ display:flex;
+ flex-direction:column;
+ gap:6px;
+ max-height:100%;
+ overflow:auto;
+}
+
+.history-item{
+ display:flex;
+ align-items:center;
+ gap:6px;
+ padding:9px;
+ border:1px solid transparent;
+ border-radius:12px;
+ color:var(--muted);
+ background:rgba(255,255,255,.025);
+ cursor:pointer;
+ transition:.2s;
+}
+
+.history-item:hover{
+ color:var(--text);
+ background:rgba(255,255,255,.07);
+ border-color:var(--line);
+}
+
+.history-name{
+ flex:1;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ font-size:12px;
+}
+
+.history-delete{
+ width:25px;
+ height:25px;
+ border:0;
+ border-radius:8px;
+ background:transparent;
+ color:var(--muted);
+ cursor:pointer;
+}
+
+.history-delete:hover{
+ color:var(--danger);
+ background:rgba(255,93,115,.1);
+}
+
+.sidebar-bottom{
+ display:grid;
+ gap:7px;
+ margin-top:15px;
+}
+
+.side-btn{
+ width:100%;
+ padding:11px;
+ border:1px solid var(--line);
+ border-radius:13px;
+ background:rgba(255,255,255,.035);
+ color:var(--muted);
+ cursor:pointer;
+ text-align:left;
+ transition:.2s;
+}
+
+.side-btn:hover{
+ color:var(--text);
+ background:rgba(255,255,255,.075);
+ transform:translateX(2px);
+}
+
+.main{
+ min-width:0;
+ flex:1;
+ display:flex;
+ flex-direction:column;
+ overflow:hidden;
+ border:1px solid var(--line);
+ border-radius:27px;
+ background:var(--panel);
+ backdrop-filter:blur(30px);
+ -webkit-backdrop-filter:blur(30px);
+ box-shadow:var(--shadow);
+}
+
+.topbar{
+ display:none;
+}
+
+.chat{
+ flex:1;
+ overflow:auto;
+ padding:30px 7%;
+ scroll-behavior:smooth;
+}
+
+.welcome{
+ max-width:760px;
+ margin:6vh auto 38px;
+ text-align:center;
+ animation:welcome .8s ease;
+}
+
+@keyframes welcome{
+ from{
+  opacity:0;
+  transform:translateY(25px) scale(.96);
+ }
+ to{
+  opacity:1;
+  transform:none;
+ }
+}
+
+.ai-core{
+ position:relative;
+ width:125px;
+ height:125px;
+ margin:auto auto 25px;
+ display:grid;
+ place-items:center;
+ border-radius:39px;
+ background:linear-gradient(135deg,var(--accent),var(--accent2));
+ box-shadow:
+ 0 0 35px rgba(130,90,255,.45),
+ 0 0 100px rgba(34,211,238,.15);
+ animation:coreSpin 12s linear infinite reverse;
+}
+
+.ai-core::before{
+ content:"";
+ position:absolute;
+ inset:-12px;
+ border:1px solid rgba(139,92,246,.3);
+ border-radius:45px;
+ animation:ring 4s linear infinite;
+}
+
+.ai-core::after{
+ content:"";
+ position:absolute;
+ inset:-23px;
+ border:1px solid rgba(34,211,238,.15);
+ border-radius:52px;
+ animation:ring 7s linear infinite reverse;
+}
+
+@keyframes coreFloat{
+ 50%{transform:translateY(-9px) rotate(2deg)}
+}
+
+@keyframes ring{
+ to{transform:rotate(360deg)}
+}
+
+.core-symbol{
+ display:grid;
+ place-items:center;
+ width:100%;
+ height:100%;
+ color:white;
+ text-shadow:0 0 20px white;
+ animation:coreSpin 12s linear infinite;
+}
+
+.core-symbol-mark{
+ display:inline-block;
+ width:108px;
+ height:108px;
+
+
+}
+
+.mini-logo-svg{
+ display:block;
+ width:100%;
+ height:100%;
+ overflow:visible;
+ filter:drop-shadow(0 0 8px rgba(255,255,255,.3));
+}
+
+.core-symbol-name{
+ font-size:23px;
+ font-weight:800;
+ letter-spacing:.45px;
+ line-height:1.1;
+}
+
+.ai-word{
+ color:#a5f3fc;
+ text-shadow:0 0 10px rgba(34,211,238,.4);
+}
+
+@keyframes coreSpin{
+ to{transform:rotate(360deg)}
+}
+
+@keyframes coreCounterSpin{
+ to{transform:rotate(-360deg)}
+}
+
+.welcome h2{
+ font-size:clamp(34px,5vw,60px);
+ letter-spacing:-2.5px;
+ margin-bottom:12px;
+ background:linear-gradient(
+ 90deg,
+ white,
+ #b49cff,
+ #6cecff,
+ white
+ );
+ background-size:300%;
+ -webkit-background-clip:text;
+ color:transparent;
+ animation:textGradient 5s linear infinite;
+}
+
+@keyframes textGradient{
+ to{background-position:300%}
+}
+
+.welcome p{
+ color:var(--muted);
+ line-height:1.7;
+ max-width:620px;
+ margin:auto;
+}
+
+.quick-actions{
+ margin:25px auto 0;
+ display:flex;
+ flex-wrap:wrap;
+ justify-content:center;
+ gap:8px;
+}
+
+.quick{
+ border:1px solid var(--line);
+ background:rgba(255,255,255,.035);
+ color:var(--muted);
+ padding:9px 13px;
+ border-radius:12px;
+ cursor:pointer;
+ transition:.2s;
+}
+
+.quick:hover{
+ color:var(--text);
+ border-color:rgba(139,92,246,.5);
+ transform:translateY(-2px);
+}
+
+.messages{
+ max-width:920px;
+ margin:auto;
+ width:100%;
+}
+
+.message{
+ display:flex;
+ margin:18px 0;
+ animation:messageIn .35s ease;
+}
+
+.message.user{
+ justify-content:flex-end;
+}
+
+@keyframes messageIn{
+ from{
+  opacity:0;
+  transform:translateY(10px);
+ }
+ to{
+  opacity:1;
+  transform:none;
+ }
+}
+
+.bubble{
+ max-width:80%;
+ padding:14px 17px;
+ border-radius:19px;
+ font-size:14px;
+ line-height:1.6;
+ white-space:pre-wrap;
+ word-break:break-word;
+}
+
+.user .bubble{
+ color:white;
+ background:linear-gradient(135deg,var(--accent),#a855f7);
+ border-bottom-right-radius:5px;
+ box-shadow:0 10px 30px rgba(100,70,255,.2);
+}
+
+.ai .bubble{
+ background:var(--panel2);
+ border:1px solid var(--line);
+ border-bottom-left-radius:5px;
+}
+
+.typing{
+ display:none;
+ width:max-content;
+ align-items:center;
+ gap:5px;
+ padding:12px 16px;
+ border-radius:17px;
+ background:var(--panel2);
+ border:1px solid var(--line);
+ margin-top:8px;
+}
+
+.typing.show{
+ display:flex;
+}
+
+.typing span{
+ width:6px;
+ height:6px;
+ border-radius:50%;
+ background:var(--muted);
+ animation:type 1s infinite;
+}
+
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+
+@keyframes type{
+ 30%{
+  transform:translateY(-5px);
+  opacity:1;
+ }
+}
+
+.input-area{
+ padding:13px 7% 20px;
+}
+
+.input-box{
+ max-width:920px;
+ margin:auto;
+ display:flex;
+ align-items:flex-end;
+ gap:6px;
+ padding:8px;
+ border:1px solid var(--line);
+ border-radius:21px;
+ background:rgba(5,7,15,.55);
+ backdrop-filter:blur(20px);
+ transition:.25s;
+}
+
+body.light .input-box{
+ background:rgba(255,255,255,.65);
+}
+
+.input-box:focus-within{
+ border-color:color-mix(in srgb,var(--accent) 65%,transparent);
+ box-shadow:
+ 0 0 0 4px color-mix(in srgb,var(--accent) 10%,transparent),
+ 0 0 35px color-mix(in srgb,var(--accent) 15%,transparent);
+}
+
+.input-action{
+ width:42px;
+ height:42px;
+ flex-shrink:0;
+ border:0;
+ border-radius:13px;
+ background:transparent;
+ color:var(--muted);
+ cursor:pointer;
+ font-size:17px;
+ transition:.2s;
+}
+
+.input-action:hover{
+ color:var(--text);
+ background:rgba(255,255,255,.06);
+}
+
+textarea{
+ flex:1;
+ min-height:42px;
+ max-height:150px;
+ resize:none;
+ border:0;
+ outline:0;
+ background:transparent;
+ color:var(--text);
+ padding:11px 5px;
+ font:inherit;
+}
+
+textarea::placeholder{
+ color:var(--muted);
+}
+
+.send{
+ width:44px;
+ height:44px;
+ flex-shrink:0;
+ border:0;
+ border-radius:14px;
+ color:white;
+ cursor:pointer;
+ font-size:18px;
+ background:linear-gradient(135deg,var(--accent),var(--accent2));
+ transition:.25s;
+}
+
+.send:hover{
+ transform:scale(1.08) rotate(-4deg);
+ box-shadow:0 0 30px color-mix(in srgb,var(--accent) 45%,transparent);
+}
+
+.input-area{
+ position:relative;
+}
+.attach-menu{
+ position:absolute;
+ z-index:30;
+ left:7%;
+ bottom:78px;
+ min-width:205px;
+ padding:6px;
+ display:grid;
+ gap:3px;
+ border:1px solid var(--line);
+ border-radius:15px;
+ background:var(--panel2);
+ box-shadow:0 16px 45px rgba(0,0,0,.35);
+ backdrop-filter:blur(20px);
+}
+.attach-menu[hidden]{
+ display:none;
+}
+.attach-menu button{
+ width:100%;
+ padding:11px 12px;
+ border:0;
+ border-radius:10px;
+ background:transparent;
+ color:var(--text);
+ text-align:left;
+ cursor:pointer;
+ font:inherit;
+ font-size:13px;
+}
+.attach-menu button:hover{
+ background:rgba(139,92,246,.16);
+}
+.image-preview{
+ max-width:920px;
+ margin:0 auto 9px;
+ padding:9px 12px;
+ display:flex;
+ align-items:center;
+ gap:11px;
+ border:1px solid var(--line);
+ border-radius:15px;
+ background:var(--panel2);
+}
+.image-preview[hidden]{
+ display:none;
+}
+.image-preview img{
+ width:54px;
+ height:54px;
+ flex-shrink:0;
+ object-fit:cover;
+ border-radius:9px;
+}
+.image-preview-icon{
+ width:54px;
+ height:54px;
+ flex-shrink:0;
+ display:grid;
+ place-items:center;
+ border-radius:9px;
+ background:rgba(139,92,246,.16);
+ color:var(--text);
+ font-size:14px;
+ font-weight:700;
+}
+.image-preview img[hidden],
+.image-preview-icon[hidden]{
+ display:none;
+}
+.image-preview-info{
+ min-width:0;
+ flex:1;
+ display:flex;
+ flex-direction:column;
+ gap:3px;
+}
+.image-preview-name{
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ font-size:12px;
+ color:var(--text);
+}
+.image-preview-note{
+ font-size:10px;
+ line-height:1.4;
+ color:var(--muted);
+}
+.input-action.recording{
+ color:white;
+ background:linear-gradient(135deg,var(--accent),#ef4444);
+ box-shadow:0 0 20px rgba(239,68,68,.35);
+ animation:voicePulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes voicePulse{
+ to{transform:scale(1.08)}
+}
+.image-preview-remove{
+ width:34px;
+ height:34px;
+ flex-shrink:0;
+ border:0;
+ border-radius:10px;
+ background:rgba(255,255,255,.06);
+ color:var(--muted);
+ cursor:pointer;
+ font-size:16px;
+}
+.bubble-image{
+ display:block;
+ width:auto;
+ max-width:min(360px,100%);
+ max-height:320px;
+ object-fit:contain;
+ border-radius:12px;
+ margin-bottom:9px;
+}
+.hint{
+ text-align:center;
+ color:var(--muted);
+ font-size:10px;
+ margin-top:7px;
+ opacity:.65;
+}
+
+.overlay{
+ position:fixed;
+ inset:0;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ z-index:100;
+ background:rgba(0,0,0,.58);
+ backdrop-filter:blur(12px);
+}
+
+.overlay.show{
+ display:flex;
+ animation:fade .2s ease;
+}
+
+@keyframes fade{
+ from{opacity:0}
+ to{opacity:1}
+}
+
+.settings{
+ width:min(650px,94vw);
+ max-height:88vh;
+ overflow:auto;
+ padding:25px;
+ border:1px solid var(--line);
+ border-radius:27px;
+ background:var(--panel2);
+ backdrop-filter:blur(35px);
+ box-shadow:0 35px 120px rgba(0,0,0,.5);
+ animation:modal .35s cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes modal{
+ from{
+  opacity:0;
+  transform:translateY(25px) scale(.94);
+ }
+ to{
+  opacity:1;
+  transform:none;
+ }
+}
+
+.settings-header{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ margin-bottom:20px;
+}
+
+.settings-header h2{
+ font-size:24px;
+}
+
+.close{
+ width:37px;
+ height:37px;
+ border:0;
+ border-radius:11px;
+ background:rgba(255,255,255,.07);
+ color:var(--text);
+ cursor:pointer;
+}
+
+.setting-section{
+ margin-top:20px;
+}
+
+.setting-section h3{
+ font-size:11px;
+ color:var(--muted);
+ text-transform:uppercase;
+ letter-spacing:1.2px;
+ margin-bottom:8px;
+}
+
+.setting{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:15px;
+ padding:15px 4px;
+ border-bottom:1px solid var(--line);
+}
+
+.setting-info strong{
+ display:block;
+ font-size:14px;
+}
+
+.setting-info small{
+ display:block;
+ color:var(--muted);
+ font-size:11px;
+ margin-top:3px;
+}
+
+select{
+ min-width:125px;
+ border:1px solid var(--line);
+ border-radius:10px;
+ padding:9px 10px;
+ background:var(--panel);
+ color:var(--text);
+ outline:0;
+}
+
+.toggle{
+ width:48px;
+ height:27px;
+ flex-shrink:0;
+ border:0;
+ border-radius:30px;
+ background:#363b4e;
+ position:relative;
+ cursor:pointer;
+ transition:.3s;
+}
+
+.toggle::after{
+ content:"";
+ position:absolute;
+ width:21px;
+ height:21px;
+ top:3px;
+ left:3px;
+ border-radius:50%;
+ background:white;
+ transition:.3s cubic-bezier(.2,.8,.2,1);
+}
+
+.toggle.active{
+ background:linear-gradient(135deg,var(--accent),var(--accent2));
+}
+
+.toggle.active::after{
+ transform:translateX(21px);
+}
+
+.color-row{
+ display:flex;
+ gap:7px;
+ flex-wrap:wrap;
+}
+
+.color{
+ width:25px;
+ height:25px;
+ border:2px solid transparent;
+ border-radius:50%;
+ cursor:pointer;
+}
+
+.color.selected{
+ border-color:white;
+ box-shadow:0 0 0 2px var(--accent);
+}
+
+.c-purple{background:#8b5cf6}
+.c-blue{background:#3b82f6}
+.c-cyan{background:#06b6d4}
+.c-pink{background:#ec4899}
+.c-green{background:#10b981}
+.c-orange{background:#f97316}
+
+/* MOBILE MENU BACKDROP */
+
+.mobile-menu-backdrop{
+ position:fixed;
+ inset:0;
+ z-index:80;
+ background:rgba(0,0,0,.45);
+ backdrop-filter:blur(3px);
+ opacity:0;
+ pointer-events:none;
+ transition:.3s ease;
+}
+
+.mobile-menu-backdrop.show{
+ opacity:1;
+ pointer-events:auto;
+}
+
+@media(max-width:760px){
+
+ .app{
+  padding:7px;
+ }
+
+ .sidebar{
+  position:fixed;
+  z-index:90;
+  left:7px;
+  top:7px;
+  bottom:7px;
+  width:min(290px,82vw);
+  transform:translateX(-120%);
+  touch-action:pan-y;
+  transition:transform .35s cubic-bezier(.2,.8,.2,1);
+ }
+
+ .sidebar.open{
+  transform:translateX(0);
+ }
+
+ .main{
+  border-radius:21px;
+ }
+
+ .chat{
+  padding:25px 13px;
+ }
+
+ .input-area{
+  padding:10px 10px 14px;
+ }
+ .attach-menu{
+  left:10px;
+  bottom:72px;
+ }
+
+ .bubble{
+  max-width:90%;
+ }
+
+ .welcome{
+  margin-top:4vh;
+ }
+
+ .ai-core{
+  width:88px;
+  height:88px;
+  border-radius:28px;
+ }
+
+ .core-symbol-mark{
+  width:74px;
+  height:74px;
+ }
+
+ .welcome h2{
+  font-size:35px;
+ }
+
+ .settings{
+  max-height:92vh;
+  padding:20px;
+ }
+
+}
+
+::-webkit-scrollbar{
+ width:5px;
+}
+
+::-webkit-scrollbar-thumb{
+ background:rgba(255,255,255,.12);
+ border-radius:20px;
+}
 </style>
 </head>
 
 <body>
 
-<aside class="sidebar">
-    <div class="logo">🤖 Mini.AI</div>
-    <button class="new-chat" onclick="newChat()" data-i="newChat"></button>
-    <div class="h-label" data-i="history"></div>
-    <div class="history" id="history"></div>
-    <div class="user-label" id="userLabel"></div>
-    <button class="settings-button" onclick="openModal('settings')" data-i="settings"></button>
+<div class="bg">
+ <div class="grid"></div>
+ <div class="orb orb1"></div>
+ <div class="orb orb2"></div>
+ <div class="orb orb3"></div>
+</div>
+
+<!-- MOBILE MENU BACKDROP -->
+<div
+ class="mobile-menu-backdrop"
+ id="mobileMenuBackdrop">
+</div>
+
+<div class="app">
+
+<aside class="sidebar" id="sidebar">
+
+ <div class="brand">
+  <div class="logo" aria-hidden="true">
+   <svg class="mini-logo-svg" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(0 256 256)"/>
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(90 256 256)"/>
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(45 256 256)"/>
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(135 256 256)"/>    </svg>
+  </div>
+
+  <div>
+   <h1>Mini<span class="ai-word">.AI</span></h1>
+   <small data-i18n="brandSubtitle">
+    Intelligent AI Assistant
+   </small>
+  </div>
+
+ </div>
+
+ <button
+  class="new-chat"
+  onclick="newChat()"
+  data-i18n="newChat">
+  ＋ New Chat
+ </button>
+
+ <div class="history-section">
+
+  <div class="history-title">
+   🕘 <span data-i18n="history">History</span>
+  </div>
+
+  <div id="historyList"></div>
+
+ </div>
+
+ <div class="sidebar-bottom">
+
+  <button
+   class="side-btn"
+   onclick="openSettings()"
+   data-i18n="settings">
+   ⚙️ Settings
+  </button>
+
+ </div>
+
 </aside>
 
 <main class="main">
-    <header class="header"></header>
 
-    <section class="chat" id="chat">
-        <div class="welcome" id="welcome">
-            <h1 data-i="welcomeH"></h1>
-            <p data-i="welcomeP"></p>
-        </div>
-    </section>
+<header class="topbar"></header>
 
-    <div class="input-area">
-        <div class="input-box">
-            <input id="messageInput" type="text" onkeydown="handleKey(event)">
-            <button class="send" onclick="sendMessage()" aria-label="Send">➤</button>
-        </div>
-    </div>
-</main>
+<section class="chat" id="chat">
 
-<!-- SETTINGS -->
-<div class="modal" id="settings">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2 data-i="settings"></h2>
-            <button class="close" onclick="closeModal('settings')" aria-label="Close">×</button>
-        </div>
+ <div class="welcome" id="welcome">
 
-        <div class="setting-item">
-            <label data-i="account"></label>
-            <div id="accountBox"></div>
-        </div>
+  <div class="ai-core">
+   <span class="core-symbol" aria-label="Mini.AI">
+    <svg class="mini-logo-svg core-symbol-mark" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mini.AI logo">
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(0 256 256)"/>
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(90 256 256)"/>
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(45 256 256)"/>
+        <ellipse cx="256" cy="256" rx="154" ry="82" fill="none" stroke="#FFFFFF" stroke-width="20" transform="rotate(135 256 256)"/>    </svg>
+   </span>
+  </div>
 
-        <div class="setting-item">
-            <label for="language" data-i="language"></label>
-            <select id="language" onchange="setLang(this.value)">
-                <option value="hy">Հայերեն</option>
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-            </select>
-        </div>
+  <h2 data-i18n="welcomeTitle">
+   Meet Mini.AI
+  </h2>
 
-        <div class="setting-item">
-            <label data-i="theme"></label>
-            <button class="toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Theme"></button>
-        </div>
-    </div>
+  <p data-i18n="welcomeText">
+   Your intelligent assistant for answers, web search,
+   weather, news, sports, comparisons and more.
+  </p>
+
+  <div class="quick-actions">
+
+   <button class="quick"
+    onclick="quick('Երևանի եղանակը')"
+    data-i18n="weather">
+    🌤️ Weather
+   </button>
+
+   <button class="quick"
+    onclick="quick('վերջին նորությունները')"
+    data-i18n="news">
+    📰 News
+   </button>
+
+   <button class="quick"
+    onclick="quick('այսօրվա ֆուտբոլային խաղերը')"
+    data-i18n="sports">
+    ⚽ Sports
+   </button>
+
+   <button class="quick"
+    onclick="quick('100 դոլարը քանի դրամ է')"
+    data-i18n="currency">
+    💱 Currency
+   </button>
+
+   <button class="quick"
+    onclick="quick('Լոնդոնի ժամը')"
+    data-i18n="worldTime">
+    🕐 World Time
+   </button>
+
+  </div>
+
+ </div>
+
+ <div class="messages" id="messages"></div>
+
+ <div class="typing" id="typing">
+  <span></span>
+  <span></span>
+  <span></span>
+ </div>
+
+</section>
+
+<div class="input-area">
+
+ <div class="attach-menu" id="attachMenu" hidden>
+  <button type="button" onclick="openImagePicker()" data-i18n="attachMenuImage">🖼️ Նկար ընտրել</button>
+  <button type="button" onclick="startImageGeneration()" data-i18n="generateImage">🎨 Նկար ստեղծել · վճարովի</button>
+  
+  <button type="button" onclick="openFilePicker()" data-i18n="attachMenuFile">📄 Ֆայլ կցել</button>
+ </div>
+
+ <div class="image-preview" id="imagePreview" hidden>
+  <img id="imagePreviewImage" alt="" hidden>
+  <span class="image-preview-icon" id="imagePreviewIcon" hidden>📄</span>
+  <div class="image-preview-info">
+   <span class="image-preview-name" id="imagePreviewName"></span>
+   <span class="image-preview-note" data-i18n="imageCloudNote">
+    Նկարը կուղարկվի ամպային AI-ին վերլուծելու համար։
+   </span>
+  </div>
+  <button
+   class="image-preview-remove"
+   type="button"
+   onclick="removeSelectedImage()"
+   aria-label="Հեռացնել նկարը"
+   data-i18n-title="removeImage">✕</button>
+ </div>
+
+ <input
+  id="imageInput"
+  type="file"
+  accept="image/jpeg,image/png,image/webp"
+  hidden
+  onchange="handleImageSelected(event)">
+
+ <input
+  id="fileInput"
+  type="file"
+  multiple
+  accept=".txt,.md,.csv,.json,.py,.js,.html,.css,.xml,.yaml,.yml,.sql,.log,.pdf,.docx"
+  hidden
+  onchange="handleFileSelected(event)">
+
+ <div class="input-box">
+
+  <button
+   class="input-action"
+   type="button"
+   onclick="toggleAttachmentMenu()"
+   title="Կցել"
+   aria-label="Կցել"
+   aria-expanded="false"
+   data-i18n-title="attach">
+   ＋
+  </button>
+
+  <textarea
+   id="input"
+   rows="1"
+   placeholder="Ask Mini.AI anything..."
+   data-i18n-placeholder="inputPlaceholder"
+   oninput="resizeInput(this)"
+   onkeydown="handleKey(event)"
+  ></textarea>
+
+  <button
+   class="input-action"
+   id="voiceButton"
+   type="button"
+   onclick="toggleVoiceInput()"
+   title="Ձայնով մուտքագրել"
+   aria-label="Ձայնով մուտքագրել"
+   data-i18n-title="voiceInput">
+   🎙
+  </button>
+
+  <button
+   class="send"
+   onclick="sendMessage()">
+   ➤
+  </button>
+
+ </div>
+
+ <div class="hint" data-i18n="hint">
+  Mini.AI may make mistakes. Check important information.
+ </div>
+
 </div>
 
-<!-- LOGIN / SIGN UP -->
-<div class="modal" id="auth">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2 id="authTitle"></h2>
-            <button class="close" onclick="closeModal('auth')" aria-label="Close">×</button>
-        </div>
-        <div class="tabs">
-            <button class="tab" id="tabLogin" onclick="setMode('login')" data-i="login"></button>
-            <button class="tab" id="tabSignup" onclick="setMode('signup')" data-i="signup"></button>
-        </div>
-        <div class="field"><input id="authUser" type="text" autocomplete="username"></div>
-        <div class="field"><input id="authPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()"></div>
-        <div class="err" id="authErr"></div>
-        <button class="primary" id="authSubmit" onclick="submitAuth()"></button>
+</main>
+
+</div>
+
+<!-- SETTINGS -->
+
+<div
+ class="overlay"
+ id="overlay"
+ onclick="outsideModal(event)">
+
+ <div class="settings">
+
+  <div class="settings-header">
+
+   <h2 data-i18n="settingsTitle">
+    ⚙️ Mini.AI Settings
+   </h2>
+
+   <button class="close" onclick="closeSettings()">
+    ✕
+   </button>
+
+  </div>
+
+  <div class="setting-section">
+
+   <h3 data-i18n="appearance">
+    Appearance
+   </h3>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="darkMode">Dark mode</strong>
+     <small data-i18n="darkModeDesc">
+      Use dark interface
+     </small>
     </div>
+
+    <button
+     class="toggle active"
+     id="darkToggle"
+     onclick="toggleDark()">
+    </button>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="interfaceLanguage">
+      Interface language
+     </strong>
+
+     <small data-i18n="interfaceLanguageDesc">
+      Change UI language
+     </small>
+    </div>
+
+    <select id="language">
+     <option value="hy">Հայերեն</option>
+     <option value="en">English</option>
+     <option value="ru">Русский</option>
+    </select>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="accent">
+      Accent color
+     </strong>
+
+     <small data-i18n="accentDesc">
+      Customize Mini.AI colors
+     </small>
+    </div>
+
+    <div class="color-row">
+
+     <button class="color c-purple"
+      title="Purple"
+      onclick="accent('#8b5cf6','#22d3ee',this)">
+     </button>
+
+     <button class="color c-blue"
+      title="Blue"
+      onclick="accent('#3b82f6','#06b6d4',this)">
+     </button>
+
+     <button class="color c-cyan"
+      title="Cyan"
+      onclick="accent('#06b6d4','#22d3ee',this)">
+     </button>
+
+     <button class="color c-pink"
+      title="Pink"
+      onclick="accent('#ec4899','#8b5cf6',this)">
+     </button>
+
+     <button class="color c-green"
+      title="Green"
+      onclick="accent('#10b981','#22d3ee',this)">
+     </button>
+
+     <button class="color c-orange"
+      title="Orange"
+      onclick="accent('#f97316','#ec4899',this)">
+     </button>
+
+    </div>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="animations">
+      Animations
+     </strong>
+
+     <small data-i18n="animationsDesc">
+      UI motion and transitions
+     </small>
+    </div>
+
+    <button
+     class="toggle active"
+     id="animationToggle"
+     onclick="toggleAnimations()">
+    </button>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="backgroundEffects">
+      Background effects
+     </strong>
+
+     <small data-i18n="backgroundEffectsDesc">
+      Particles, glow and grid
+     </small>
+    </div>
+
+    <button
+     class="toggle active"
+     id="effectsToggle"
+     onclick="toggleEffects()">
+    </button>
+
+   </div>
+
+  </div>
+
+  <div class="setting-section">
+
+   <h3 data-i18n="aiSection">
+    AI
+   </h3>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="model">
+      Model
+     </strong>
+
+     <small data-i18n="modelDesc">
+      Select active AI model
+     </small>
+    </div>
+
+    <select id="model">
+     <option value="qwen3:1.7b">
+      Qwen3 1.7B (Ollama)
+     </option>
+    </select>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="responseStyle">
+      Response style
+     </strong>
+
+     <small data-i18n="responseStyleDesc">
+      How Mini.AI should answer
+     </small>
+    </div>
+
+    <select id="style">
+     <option>Balanced</option>
+     <option>Concise</option>
+     <option>Detailed</option>
+     <option>Professional</option>
+     <option>Friendly</option>
+    </select>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="responseLength">
+      Response length
+     </strong>
+
+     <small data-i18n="responseLengthDesc">
+      Default answer size
+     </small>
+    </div>
+
+    <select id="length">
+     <option>Short</option>
+     <option>Medium</option>
+     <option>Long</option>
+    </select>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="webSearch">
+      Web Search
+     </strong>
+
+     <small data-i18n="webSearchDesc">
+      Allow current web information
+     </small>
+    </div>
+
+    <button
+     class="toggle active"
+     id="searchToggle"
+     onclick="toggleSearch()">
+    </button>
+
+   </div>
+
+  </div>
+
+  <div class="setting-section">
+
+   <h3 data-i18n="experience">
+    Experience
+   </h3>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="sound">
+      Sound effects
+     </strong>
+
+     <small data-i18n="soundDesc">
+      Interface sounds
+     </small>
+    </div>
+
+    <button
+     class="toggle"
+     id="soundToggle"
+     onclick="toggleSound()">
+    </button>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="autoFocus">
+      Auto focus
+     </strong>
+
+     <small data-i18n="autoFocusDesc">
+      Focus message box automatically
+     </small>
+    </div>
+
+    <button
+     class="toggle active"
+     id="focusToggle"
+     onclick="toggleFocus()">
+    </button>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="typingIndicator">
+      Typing indicator
+     </strong>
+
+     <small data-i18n="typingIndicatorDesc">
+      Show AI thinking animation
+     </small>
+    </div>
+
+    <button
+     class="toggle active"
+     id="typingToggle"
+     onclick="toggleTypingSetting()">
+    </button>
+
+   </div>
+
+  </div>
+
+  <div class="setting-section">
+
+   <h3 data-i18n="data">
+    Data
+   </h3>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="chatHistory">
+      Chat history
+     </strong>
+
+     <small data-i18n="chatHistoryDesc">
+      Saved locally in this browser
+     </small>
+    </div>
+
+    <span
+     data-i18n="saved"
+     style="color:var(--muted);font-size:11px;">
+     Saved
+    </span>
+
+   </div>
+
+   <div class="setting">
+
+    <div class="setting-info">
+     <strong data-i18n="resetSettings">
+      Reset settings
+     </strong>
+
+     <small data-i18n="resetSettingsDesc">
+      Restore default preferences
+     </small>
+    </div>
+
+    <button
+     class="side-btn"
+     style="width:auto"
+     onclick="resetSettings()"
+     data-i18n="reset">
+     Reset
+    </button>
+
+   </div>
+
+  </div>
+
+ </div>
+
 </div>
 
 <script>
-/* ---------- TRANSLATIONS (menu only) ---------- */
-const T = {
-  hy: {
-    newChat:"+ Նոր չատ", settings:"⚙️ Կարգավորումներ", language:"🌐 Լեզու", theme:"🌙 Մութ / Լույս",
-    history:"Պատմություն", empty:"Դեռ չատեր չկան", del:"Ջնջել",
-    welcomeH:"Ինչպե՞ս կարող եմ օգնել 🤖", welcomeP:"Հարցրու Mini.AI-ին ցանկացած բան։",
-    ph:"Գրիր հաղորդագրություն Mini.AI-ին...", account:"👤 Հաշիվ",
-    login:"Մուտք", signup:"Գրանցվել", logout:"Դուրս գալ", guest:"Դու դեռ մուտք չես գործել։",
-    hello:"Բարև, ", userPh:"Օգտանուն", passPh:"Գաղտնաբառ",
-    errEmpty:"Լրացրու բոլոր դաշտերը։", errShort:"Գաղտնաբառը պետք է լինի առնվազն 4 նիշ։",
-    errTaken:"Այս օգտանունը զբաղված է։", errBad:"Սխալ օգտանուն կամ գաղտնաբառ։"
-  },
-  en: {
-    newChat:"+ New Chat", settings:"⚙️ Settings", language:"🌐 Language", theme:"🌙 Dark / Light",
-    history:"History", empty:"No chats yet", del:"Delete",
-    welcomeH:"How can I help? 🤖", welcomeP:"Ask Mini.AI anything.",
-    ph:"Message Mini.AI...", account:"👤 Account",
-    login:"Log in", signup:"Sign up", logout:"Log out", guest:"You are not logged in.",
-    hello:"Hello, ", userPh:"Username", passPh:"Password",
-    errEmpty:"Fill in all fields.", errShort:"Password must be at least 4 characters.",
-    errTaken:"This username is already taken.", errBad:"Wrong username or password."
-  },
-  ru: {
-    newChat:"+ Новый чат", settings:"⚙️ Настройки", language:"🌐 Язык", theme:"🌙 Тёмная / Светлая",
-    history:"История", empty:"Пока нет чатов", del:"Удалить",
-    welcomeH:"Чем могу помочь? 🤖", welcomeP:"Спросите Mini.AI о чём угодно.",
-    ph:"Сообщение Mini.AI...", account:"👤 Аккаунт",
-    login:"Войти", signup:"Регистрация", logout:"Выйти", guest:"Вы ещё не вошли.",
-    hello:"Привет, ", userPh:"Имя пользователя", passPh:"Пароль",
-    errEmpty:"Заполните все поля.", errShort:"Пароль должен быть не короче 4 символов.",
-    errTaken:"Это имя уже занято.", errBad:"Неверное имя или пароль."
+
+const input=document.getElementById("input");
+const messages=document.getElementById("messages");
+const typing=document.getElementById("typing");
+const welcome=document.getElementById("welcome");
+const imageInput=document.getElementById("imageInput");
+const fileInput=document.getElementById("fileInput");
+const voiceButton=document.getElementById("voiceButton");
+const imagePreview=document.getElementById("imagePreview");
+const imagePreviewImage=document.getElementById("imagePreviewImage");
+const imagePreviewIcon=document.getElementById("imagePreviewIcon");
+const imagePreviewName=document.getElementById("imagePreviewName");
+const attachMenu=document.getElementById("attachMenu");
+
+let selectedImageData=null;
+let selectedFilePayloads=[];
+let imageGenerationMode=false;
+let voiceRecognition=null;
+
+let darkMode=
+ localStorage.getItem("miniDark")!=="false";
+
+let animations=
+ localStorage.getItem("miniAnimations")!=="false";
+
+let effects=
+ localStorage.getItem("miniEffects")!=="false";
+
+let searchEnabled=
+ localStorage.getItem("miniSearch")!=="false";
+
+let focusEnabled=
+ localStorage.getItem("miniFocus")!=="false";
+
+let typingEnabled=
+ localStorage.getItem("miniTyping")!=="false";
+
+let soundEnabled=
+ localStorage.getItem("miniSound")==="true";
+
+let historyData=
+ JSON.parse(
+  localStorage.getItem("miniHistory") || "[]"
+ );
+
+let currentChatId=null;
+
+/* TRANSLATIONS */
+
+const translations={
+
+ hy:{
+  brandSubtitle:"Խելացի AI օգնական",
+  newChat:"＋ Նոր զրույց",
+  history:"Պատմություն",
+  settings:"⚙️ Կարգավորումներ",
+  welcomeTitle:"Ծանոթացիր Mini.AI-ի հետ",
+  welcomeText:"Քո խելացի օգնականը պատասխանների, վեբ որոնման, եղանակի, նորությունների, սպորտի, համեմատությունների և այլնի համար։",
+  weather:"🌤️ Եղանակ",
+  news:"📰 Նորություններ",
+  sports:"⚽ Սպորտ",
+  currency:"💱 Արժույթ",
+  worldTime:"🕐 Աշխարհի ժամ",
+  inputPlaceholder:"Հարցրու Mini.AI-ին ցանկացած բան...",
+  hint:"Mini.AI-ն կարող է սխալվել։ Կարևոր տեղեկությունը ստուգիր։",
+  settingsTitle:"⚙️ Mini.AI Կարգավորումներ",
+  appearance:"Տեսք",
+  darkMode:"Մութ ռեժիմ",
+  darkModeDesc:"Օգտագործել մութ ինտերֆեյս",
+  interfaceLanguage:"Ինտերֆեյսի լեզու",
+  interfaceLanguageDesc:"Փոխել Mini.AI-ի լեզուն",
+  accent:"Accent գույն",
+  accentDesc:"Փոխել Mini.AI-ի հիմնական գույները",
+  animations:"Անիմացիաներ",
+  animationsDesc:"Ինտերֆեյսի շարժումներ և անցումներ",
+  backgroundEffects:"Ֆոնի էֆեկտներ",
+  backgroundEffectsDesc:"Փայլեր և ցանց",
+  aiSection:"AI",
+  model:"Մոդել",
+  modelDesc:"Qwen3 1.7B՝ Ollama-ի տեղական մոդել",
+  responseStyle:"Պատասխանի ոճ",
+  responseStyleDesc:"Ինչպես պետք է պատասխանի Mini.AI-ն",
+  responseLength:"Պատասխանի երկարություն",
+  responseLengthDesc:"Պատասխանի ստանդարտ չափը",
+  webSearch:"Վեբ որոնում",
+  webSearchDesc:"Թույլատրել ընթացիկ վեբ տեղեկությունը",
+  experience:"Փորձ",
+  sound:"Ձայնային էֆեկտներ",
+  soundDesc:"Ինտերֆեյսի ձայներ",
+  autoFocus:"Ավտոմատ ֆոկուս",
+  autoFocusDesc:"Ավտոմատ կենտրոնացնել հաղորդագրության դաշտը",
+  typingIndicator:"Մուտքագրման ցուցիչ",
+  typingIndicatorDesc:"Ցույց տալ AI-ի մտածելու անիմացիան",
+  data:"Տվյալներ",
+  chatHistory:"Զրույցների պատմություն",
+  chatHistoryDesc:"Պահվում է այս բրաուզերում",
+  saved:"Պահված է",
+  resetSettings:"Վերականգնել կարգավորումները",
+  resetSettingsDesc:"Վերադարձնել սկզբնական կարգավորումները",
+  reset:"Վերականգնել",
+  connectionError:"Չհաջողվեց կապվել Mini.AI-ի հետ։ Ստուգիր app.py-ն և ինտերնետը։",
+  couldNotAnswer:"Mini.AI-ն չկարողացավ պատասխանել։",
+  attachImage:"Նկար կցել",
+  removeImage:"Հեռացնել նկարը",
+  attach:"Կցել",
+  attachMenuImage:"🖼️ Նկար ընտրել",
+  generateImage:"🎨 Նկար ստեղծել · վճարովի",
+  attachMenuFile:"📄 Ֆայլ կցել",
+  voiceInput:"Ձայնով մուտքագրել",
+  voiceUnsupported:"Այս բրաուզերում ձայնով մուտքագրումը չի աշխատում։ Փորձիր Chrome-ով։",
+  voiceError:"Չհաջողվեց ճանաչել ձայնը։ Ստուգիր միկրոֆոնի թույլտվությունը։",
+  imageCloudNote:"Ընտրված նկարը կուղարկվի Gemini-ին վերլուծելու համար։",
+  imagePromptPlaceholder:"Նկարագրիր՝ ինչ նկար ստեղծեմ...",
+  imageCostConfirm:"Յուրաքանչյուր 1K նկարն արժե մոտ $0.034։ Ստեղծե՞մ նկարը։",
+  generatedImageReady:"Ահա քո ստեղծած նկարը։",
+  removeAttachmentFirst:"Նկար ստեղծելուց առաջ հեռացրու կցված նկարը կամ ֆայլը։",
+  imageDefaultPrompt:"Նկարագրիր այս նկարը։",
+  fileDefaultPrompt:"Ամփոփիր կցված ֆայլերը։",
+  fileCountLimit:"Միաժամանակ կարող ես կցել առավելագույնը 3 ֆայլ։",
+  imageWrongType:"Ընտրիր JPEG, PNG կամ WebP նկար։",
+  imageTooLarge:"Նկարը մեծ է։ Փորձիր ընտրել ավելի փոքր նկար։",
+  fileWrongType:"Ընտրիր տեքստային ֆայլ, PDF կամ DOCX։",
+  fileTooLarge:"Ֆայլը մեծ է։ Ընտրիր մինչև 4 ՄԲ ֆայլ։",
+  imageReadError:"Չհաջողվեց բացել նկարը։ Փորձիր ուրիշ նկար ընտրել։",
+  fileReadError:"Չհաջողվեց բացել ֆայլը։ Փորձիր ուրիշ ֆայլ ընտրել։"
+ },
+
+ en:{
+  brandSubtitle:"Intelligent AI Assistant",
+  newChat:"＋ New Chat",
+  history:"History",
+  settings:"⚙️ Settings",
+  welcomeTitle:"Meet Mini.AI",
+  welcomeText:"Your intelligent assistant for answers, web search, weather, news, sports, comparisons and more.",
+  weather:"🌤️ Weather",
+  news:"📰 News",
+  sports:"⚽ Sports",
+  currency:"💱 Currency",
+  worldTime:"🕐 World Time",
+  inputPlaceholder:"Ask Mini.AI anything...",
+  hint:"Mini.AI may make mistakes. Check important information.",
+  settingsTitle:"⚙️ Mini.AI Settings",
+  appearance:"Appearance",
+  darkMode:"Dark mode",
+  darkModeDesc:"Use dark interface",
+  interfaceLanguage:"Interface language",
+  interfaceLanguageDesc:"Change UI language",
+  accent:"Accent color",
+  accentDesc:"Customize Mini.AI colors",
+  animations:"Animations",
+  animationsDesc:"UI motion and transitions",
+  backgroundEffects:"Background effects",
+  backgroundEffectsDesc:"Particles, glow and grid",
+  aiSection:"AI",
+  model:"Model",
+  modelDesc:"Qwen3 1.7B local Ollama model",
+  responseStyle:"Response style",
+  responseStyleDesc:"How Mini.AI should answer",
+  responseLength:"Response length",
+  responseLengthDesc:"Default answer size",
+  webSearch:"Web Search",
+  webSearchDesc:"Allow current web information",
+  experience:"Experience",
+  sound:"Sound effects",
+  soundDesc:"Interface sounds",
+  autoFocus:"Auto focus",
+  autoFocusDesc:"Focus message box automatically",
+  typingIndicator:"Typing indicator",
+  typingIndicatorDesc:"Show AI thinking animation",
+  data:"Data",
+  chatHistory:"Chat history",
+  chatHistoryDesc:"Saved locally in this browser",
+  saved:"Saved",
+  resetSettings:"Reset settings",
+  resetSettingsDesc:"Restore default preferences",
+  reset:"Reset",
+  connectionError:"Could not connect to Mini.AI. Check app.py and your internet connection.",
+  couldNotAnswer:"Mini.AI could not answer.",
+  attachImage:"Attach an image",
+  removeImage:"Remove image",
+  attach:"Attach",
+  attachMenuImage:"🖼️ Choose an image",
+  generateImage:"🎨 Generate image · paid",
+  attachMenuFile:"📄 Attach files",
+  voiceInput:"Type by voice",
+  voiceUnsupported:"Voice typing is not supported in this browser. Try Chrome.",
+  voiceError:"Could not recognize speech. Check microphone permission.",
+  imageCloudNote:"The selected image will be sent to Gemini for analysis.",
+  imagePromptPlaceholder:"Describe the image you want...",
+  imageCostConfirm:"Each 1K image costs about $0.034. Create this image?",
+  generatedImageReady:"Here is your generated image.",
+  removeAttachmentFirst:"Remove the attached image or file before generating an image.",
+  imageDefaultPrompt:"Describe this image.",
+  fileDefaultPrompt:"Summarize the attached files.",
+  fileCountLimit:"You can attach up to 3 files at once.",
+  imageWrongType:"Choose a JPEG, PNG, or WebP image.",
+  imageTooLarge:"The image is too large. Choose a smaller image.",
+  fileWrongType:"Choose a text file, PDF, or DOCX.",
+  fileTooLarge:"The file is too large. Choose a file up to 4 MB.",
+  imageReadError:"Could not open the image. Try choosing another one.",
+  fileReadError:"Could not open the file. Try choosing another one."
+ },
+
+ ru:{
+  brandSubtitle:"Интеллектуальный AI-помощник",
+  newChat:"＋ Новый чат",
+  history:"История",
+  settings:"⚙️ Настройки",
+  welcomeTitle:"Познакомься с Mini.AI",
+  welcomeText:"Твой интеллектуальный помощник для ответов, веб-поиска, погоды, новостей, спорта, сравнений и многого другого.",
+  weather:"🌤️ Погода",
+  news:"📰 Новости",
+  sports:"⚽ Спорт",
+  currency:"💱 Валюта",
+  worldTime:"🕐 Мировое время",
+  inputPlaceholder:"Спроси Mini.AI о чём угодно...",
+  hint:"Mini.AI может ошибаться. Проверяй важную информацию.",
+  settingsTitle:"⚙️ Настройки Mini.AI",
+  appearance:"Внешний вид",
+  darkMode:"Тёмный режим",
+  darkModeDesc:"Использовать тёмный интерфейс",
+  interfaceLanguage:"Язык интерфейса",
+  interfaceLanguageDesc:"Изменить язык Mini.AI",
+  accent:"Цвет интерфейса",
+  accentDesc:"Изменить основные цвета Mini.AI",
+  animations:"Анимации",
+  animationsDesc:"Движения и переходы интерфейса",
+  backgroundEffects:"Эффекты фона",
+  backgroundEffectsDesc:"Свечение и сетка",
+  aiSection:"AI",
+  model:"Модель",
+  modelDesc:"Локальная модель Ollama Qwen3 1.7B",
+  responseStyle:"Стиль ответа",
+  responseStyleDesc:"Как должен отвечать Mini.AI",
+  responseLength:"Длина ответа",
+  responseLengthDesc:"Стандартный размер ответа",
+  webSearch:"Веб-поиск",
+  webSearchDesc:"Разрешить актуальную информацию из интернета",
+  experience:"Опыт",
+  sound:"Звуковые эффекты",
+  soundDesc:"Звуки интерфейса",
+  autoFocus:"Автофокус",
+  autoFocusDesc:"Автоматически фокусировать поле сообщения",
+  typingIndicator:"Индикатор печати",
+  typingIndicatorDesc:"Показывать анимацию размышления AI",
+  data:"Данные",
+  chatHistory:"История чатов",
+  chatHistoryDesc:"Сохраняется в этом браузере",
+  saved:"Сохранено",
+  resetSettings:"Сбросить настройки",
+  resetSettingsDesc:"Вернуть настройки по умолчанию",
+  reset:"Сбросить",
+  connectionError:"Не удалось подключиться к Mini.AI. Проверь app.py и интернет.",
+  couldNotAnswer:"Mini.AI не смог ответить.",
+  attachImage:"Прикрепить изображение",
+  removeImage:"Удалить изображение",
+  attach:"Прикрепить",
+  attachMenuImage:"🖼️ Выбрать изображение",
+  generateImage:"🎨 Создать изображение · платно",
+  attachMenuFile:"📄 Прикрепить файлы",
+  voiceInput:"Ввод голосом",
+  voiceUnsupported:"Голосовой ввод не поддерживается в этом браузере. Попробуй Chrome.",
+  voiceError:"Не удалось распознать речь. Проверь доступ к микрофону.",
+  imageCloudNote:"Выбранное изображение будет отправлено Gemini для анализа.",
+  imagePromptPlaceholder:"Опиши изображение, которое нужно создать...",
+  imageCostConfirm:"Каждое изображение 1K стоит около $0.034. Создать его?",
+  generatedImageReady:"Вот созданное изображение.",
+  removeAttachmentFirst:"Перед созданием изображения удали прикреплённое изображение или файл.",
+  imageDefaultPrompt:"Опиши это изображение.",
+  fileDefaultPrompt:"Кратко перескажи прикреплённые файлы.",
+  fileCountLimit:"Можно прикрепить не более 3 файлов за раз.",
+  imageWrongType:"Выбери изображение JPEG, PNG или WebP.",
+  imageTooLarge:"Изображение слишком большое. Выбери файл поменьше.",
+  fileWrongType:"Выбери текстовый файл, PDF или DOCX.",
+  fileTooLarge:"Файл слишком большой. Выбери файл до 4 МБ.",
+  imageReadError:"Не удалось открыть изображение. Попробуй выбрать другое.",
+  fileReadError:"Не удалось открыть файл. Попробуй выбрать другой."
+ }
+
+};
+
+function getLanguage(){
+ return localStorage.getItem("miniLanguage") || "hy";
+}
+
+function t(key){
+ const lang=getLanguage();
+ return (translations[lang] && translations[lang][key])
+  || translations.hy[key]
+  || key;
+}
+
+function applyLanguage(){
+
+ const lang=getLanguage();
+
+ document.documentElement.lang=lang;
+
+ document.querySelectorAll("[data-i18n]").forEach(el=>{
+  const key=el.getAttribute("data-i18n");
+
+  if(translations[lang] && translations[lang][key]){
+   el.textContent=translations[lang][key];
   }
-};
+ });
 
-/* ---------- STORAGE (safe) ---------- */
-const store = {
-  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
-  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
-  del(k){ try { localStorage.removeItem(k); } catch(e){} }
-};
+ document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
 
-let lang = store.get("mini_lang") || "hy";
-if (!T[lang]) lang = "hy";
-let currentUser = store.get("mini_current") || null;
-let authMode = "login";
-let chats = [], curId = null;
+  const key=el.getAttribute("data-i18n-placeholder");
 
-const t = k => T[lang][k];
-const $ = id => document.getElementById(id);
+  if(translations[lang] && translations[lang][key]){
+   el.placeholder=translations[lang][key];
+  }
 
-/* ---------- LANGUAGE ---------- */
-function applyLang() {
-  document.documentElement.lang = lang;
-  document.querySelectorAll("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
-  $("messageInput").placeholder = t("ph");
-  $("language").value = lang;
-  $("authUser").placeholder = t("userPh");
-  $("authPass").placeholder = t("passPh");
-  setMode(authMode);
-  renderAccount();
-  renderHistory();
+ });
+
+ document.querySelectorAll("[data-i18n-title]").forEach(el=>{
+  const key=el.getAttribute("data-i18n-title");
+  if(translations[lang] && translations[lang][key]){
+   el.title=translations[lang][key];
+   el.setAttribute("aria-label",translations[lang][key]);
+  }
+ });
+
+ const language=document.getElementById("language");
+
+ if(language){
+  language.value=lang;
+ }
+
 }
 
-function setLang(l) {
-  lang = l;
-  store.set("mini_lang", l);
-  applyLang();
+function changeLanguage(){
+
+ const language=
+  document.getElementById("language").value;
+
+ localStorage.setItem("miniLanguage",language);
+
+ applyLanguage();
+
 }
 
-/* ---------- THEME ---------- */
-function applyTheme(light) {
-  document.body.classList.toggle("light", light);
-  $("themeToggle").classList.toggle("on", light);
-}
-function toggleTheme() {
-  const light = !document.body.classList.contains("light");
-  applyTheme(light);
-  store.set("mini_theme", light ? "light" : "dark");
+/* SETTINGS */
+
+function openSettings(){
+
+ document
+  .getElementById("overlay")
+  .classList.add("show");
+
+ closeMobileMenu();
+
 }
 
-/* ---------- MODALS ---------- */
-function openModal(id) { $(id).classList.add("active"); }
-function closeModal(id) { $(id).classList.remove("active"); }
-["settings","auth"].forEach(id =>
-  $(id).addEventListener("click", e => { if (e.target === $(id)) closeModal(id); })
+function closeSettings(){
+
+ document
+  .getElementById("overlay")
+  .classList.remove("show");
+
+}
+
+function outsideModal(e){
+
+ if(e.target.id==="overlay"){
+  closeSettings();
+ }
+
+}
+
+/* DARK */
+
+function toggleDark(){
+
+ darkMode=!darkMode;
+
+ document.body.classList.toggle("light",!darkMode);
+
+ document
+  .getElementById("darkToggle")
+  .classList.toggle("active",darkMode);
+
+ localStorage.setItem("miniDark",darkMode);
+
+}
+
+/* ANIMATIONS */
+
+function toggleAnimations(){
+
+ animations=!animations;
+
+ document.body.classList.toggle(
+  "no-animations",
+  !animations
+ );
+
+ document
+  .getElementById("animationToggle")
+  .classList.toggle(
+   "active",
+   animations
+  );
+
+ localStorage.setItem(
+  "miniAnimations",
+  animations
+ );
+
+}
+
+/* EFFECTS */
+
+function toggleEffects(){
+
+ effects=!effects;
+
+ document.body.classList.toggle(
+  "no-effects",
+  !effects
+ );
+
+ document
+  .getElementById("effectsToggle")
+  .classList.toggle(
+   "active",
+   effects
+  );
+
+ localStorage.setItem(
+  "miniEffects",
+  effects
+ );
+
+}
+
+/* SEARCH */
+
+function toggleSearch(){
+
+ searchEnabled=!searchEnabled;
+
+ document
+  .getElementById("searchToggle")
+  .classList.toggle(
+   "active",
+   searchEnabled
+  );
+
+ localStorage.setItem(
+  "miniSearch",
+  searchEnabled
+ );
+
+}
+
+/* SOUND */
+
+function toggleSound(){
+
+ soundEnabled=!soundEnabled;
+
+ document
+  .getElementById("soundToggle")
+  .classList.toggle(
+   "active",
+   soundEnabled
+  );
+
+ localStorage.setItem(
+  "miniSound",
+  soundEnabled
+ );
+
+}
+
+/* FOCUS */
+
+function toggleFocus(){
+
+ focusEnabled=!focusEnabled;
+
+ document
+  .getElementById("focusToggle")
+  .classList.toggle(
+   "active",
+   focusEnabled
+  );
+
+ localStorage.setItem(
+  "miniFocus",
+  focusEnabled
+ );
+
+ if(focusEnabled){
+  input.focus();
+ }
+
+}
+
+/* TYPING */
+
+function toggleTypingSetting(){
+
+ typingEnabled=!typingEnabled;
+
+ document
+  .getElementById("typingToggle")
+  .classList.toggle(
+   "active",
+   typingEnabled
+  );
+
+ localStorage.setItem(
+  "miniTyping",
+  typingEnabled
+ );
+
+}
+
+/* ACCENT */
+
+function accent(a,b,button){
+
+ document.documentElement.style.setProperty(
+  "--accent",
+  a
+ );
+
+ document.documentElement.style.setProperty(
+  "--accent2",
+  b
+ );
+
+ document
+  .querySelectorAll(".color")
+  .forEach(x=>{
+   x.classList.remove("selected");
+  });
+
+ if(button){
+  button.classList.add("selected");
+ }
+
+ localStorage.setItem("miniAccent",a);
+ localStorage.setItem("miniAccent2",b);
+
+}
+
+/* HISTORY */
+
+function saveHistory(){
+
+ localStorage.setItem(
+  "miniHistory",
+  JSON.stringify(historyData)
+ );
+
+ renderHistory();
+
+}
+
+function renderHistory(){
+
+ const list=document.getElementById("historyList");
+
+ if(!list)return;
+
+ list.innerHTML="";
+
+ historyData.forEach(chat=>{
+
+  const item=document.createElement("div");
+
+  item.className="history-item";
+
+  const name=document.createElement("div");
+
+  name.className="history-name";
+
+  name.textContent=chat.title || "New Chat";
+
+  name.onclick=()=>{
+   openHistory(chat.id);
+  };
+
+  const del=document.createElement("button");
+
+  del.className="history-delete";
+
+  del.textContent="✕";
+
+  del.title="Delete";
+
+  del.onclick=(e)=>{
+
+   e.stopPropagation();
+
+   deleteHistory(chat.id);
+
+  };
+
+  item.appendChild(name);
+
+  item.appendChild(del);
+
+  list.appendChild(item);
+
+ });
+
+}
+
+function createHistory(text){
+
+ const chat={
+
+  id:Date.now(),
+
+  title:
+   text.length>35
+    ? text.slice(0,35)+"..."
+    : text,
+
+  messages:[],
+
+  date:new Date().toISOString()
+
+ };
+
+ historyData.unshift(chat);
+
+ currentChatId=chat.id;
+
+ saveHistory();
+
+}
+
+function addToCurrentHistory(text,type){
+
+ if(!currentChatId)return;
+
+ const chat=
+  historyData.find(
+   x=>x.id===currentChatId
+  );
+
+ if(!chat)return;
+
+ chat.messages.push({
+  text:text,
+  type:type
+ });
+
+ saveHistory();
+
+}
+
+function addMessageWithoutHistory(text,type){
+
+ const row=document.createElement("div");
+
+ row.className="message "+type;
+
+ const bubble=document.createElement("div");
+
+ bubble.className="bubble";
+
+ bubble.textContent=String(text);
+
+ row.appendChild(bubble);
+
+ messages.appendChild(row);
+
+}
+
+function closeAttachmentMenu(){
+ attachMenu.hidden=true;
+ document.querySelector(".input-action").setAttribute("aria-expanded","false");
+}
+
+document.addEventListener("click",function(event){
+ if(!attachMenu.contains(event.target) && !event.target.closest(".input-action")){
+  closeAttachmentMenu();
+ }
+});
+
+function toggleAttachmentMenu(){
+ attachMenu.hidden=!attachMenu.hidden;
+ document.querySelector(".input-action").setAttribute("aria-expanded",String(!attachMenu.hidden));
+}
+
+function openImagePicker(){
+ closeAttachmentMenu();
+ imageGenerationMode=false;
+ input.placeholder=t("inputPlaceholder");
+ imageInput.click();
+}
+
+function startImageGeneration(){
+ closeAttachmentMenu();
+
+ if(selectedImageData || selectedFilePayloads.length){
+  alert(t("removeAttachmentFirst"));
+  return;
+ }
+
+ imageGenerationMode=true;
+ input.placeholder=t("imagePromptPlaceholder");
+ input.focus();
+}
+
+function openFilePicker(){
+ closeAttachmentMenu();
+ imageGenerationMode=false;
+ input.placeholder=t("inputPlaceholder");
+ fileInput.click();
+}
+
+function removeSelectedImage(){
+ selectedImageData=null;
+ selectedFilePayloads=[];
+ imagePreviewImage.removeAttribute("src");
+ imagePreviewImage.hidden=true;
+ imagePreviewIcon.hidden=true;
+ imagePreviewName.textContent="";
+ imagePreview.hidden=true;
+ imageInput.value="";
+ fileInput.value="";
+}
+
+function imageFileToBlob(file){
+ return new Promise((resolve,reject)=>{
+  const objectUrl=URL.createObjectURL(file);
+  const image=new Image();
+
+  image.onload=()=>{
+   const maxSide=1600;
+   const scale=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight));
+   const canvas=document.createElement("canvas");
+   canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+   canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+
+   const context=canvas.getContext("2d");
+   if(!context){
+    URL.revokeObjectURL(objectUrl);
+    reject(new Error(t("imageReadError")));
+    return;
+   }
+
+   context.drawImage(image,0,0,canvas.width,canvas.height);
+   URL.revokeObjectURL(objectUrl);
+
+   const qualities=[0.82,0.7,0.58,0.48];
+   const tryQuality=(index)=>{
+    canvas.toBlob(blob=>{
+     if(!blob){
+      reject(new Error(t("imageReadError")));
+      return;
+     }
+     if(blob.size<=4*1024*1024){
+      resolve(blob);
+     }else if(index+1<qualities.length){
+      tryQuality(index+1);
+     }else{
+      reject(new Error(t("imageTooLarge")));
+     }
+    },"image/jpeg",qualities[index]);
+   };
+   tryQuality(0);
+  };
+
+  image.onerror=()=>{
+   URL.revokeObjectURL(objectUrl);
+   reject(new Error(t("imageReadError")));
+  };
+
+  image.src=objectUrl;
+ });
+}
+
+function blobToDataUrl(blob){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onload=()=>resolve(reader.result);
+  reader.onerror=()=>reject(new Error(t("imageReadError")));
+  reader.readAsDataURL(blob);
+ });
+}
+
+async function handleFileSelected(event){
+ const files=Array.from(event.target.files || []);
+ if(!files.length)return;
+
+ removeSelectedImage();
+
+ if(files.length>3){
+  alert(t("fileCountLimit"));
+  fileInput.value="";
+  return;
+ }
+
+ const textTypes=["txt","md","csv","json","py","js","html","css","xml","yaml","yml","sql","log"];
+ const documentTypes=["pdf","docx"];
+
+ for(const file of files){
+  const extension=(file.name.split(".").pop() || "").toLowerCase();
+
+  if(!textTypes.includes(extension) && !documentTypes.includes(extension)){
+   alert(t("fileWrongType"));
+   fileInput.value="";
+   return;
+  }
+
+  if(file.size>4*1024*1024){
+   alert(t("fileTooLarge"));
+   fileInput.value="";
+   return;
+  }
+ }
+
+ const prepared=[];
+
+ try{
+  for(const file of files){
+   const extension=(file.name.split(".").pop() || "").toLowerCase();
+
+   if(documentTypes.includes(extension)){
+    prepared.push({
+     name:file.name,
+     data:await blobToDataUrl(file)
+    });
+   }else{
+    prepared.push({
+     name:file.name,
+     text:await file.text()
+    });
+   }
+  }
+
+  selectedFilePayloads=prepared;
+  imagePreviewImage.hidden=true;
+  imagePreviewIcon.hidden=false;
+  imagePreviewIcon.textContent="📄";
+  imagePreviewName.textContent=files.map(file=>file.name).join(", ");
+  imagePreview.hidden=false;
+ }catch(error){
+  selectedFilePayloads=[];
+  alert(t("fileReadError"));
+ }finally{
+  fileInput.value="";
+ }
+}
+
+async function handleImageSelected(event){
+ const file=event.target.files && event.target.files[0];
+ if(!file)return;
+
+ removeSelectedImage();
+
+ if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+  alert(t("imageWrongType"));
+  imageInput.value="";
+  return;
+ }
+
+ if(file.size>20*1024*1024){
+  alert(t("imageTooLarge"));
+  imageInput.value="";
+  return;
+ }
+
+ try{
+  const blob=await imageFileToBlob(file);
+  selectedImageData=await blobToDataUrl(blob);
+  imagePreviewImage.src=selectedImageData;
+  imagePreviewImage.hidden=false;
+  imagePreviewIcon.hidden=true;
+  imagePreviewName.textContent=file.name;
+  imagePreview.hidden=false;
+ }catch(error){
+  selectedImageData=null;
+  alert(error.message || t("imageReadError"));
+ }finally{
+  imageInput.value="";
+ }
+}
+
+function openHistory(id){
+
+ const chat=
+  historyData.find(
+   x=>x.id===id
+  );
+
+ if(!chat)return;
+
+ currentChatId=id;
+
+ messages.innerHTML="";
+
+ welcome.style.display="none";
+
+ chat.messages.forEach(msg=>{
+
+  addMessageWithoutHistory(
+   msg.text,
+   msg.type
+  );
+
+ });
+
+ scrollBottom();
+
+ if(focusEnabled){
+  input.focus();
+ }
+
+ closeMobileMenu();
+
+}
+
+function deleteHistory(id){
+
+ historyData=
+  historyData.filter(
+   x=>x.id!==id
+  );
+
+ if(currentChatId===id){
+
+  currentChatId=null;
+
+  messages.innerHTML="";
+
+  welcome.style.display="block";
+
+ }
+
+ saveHistory();
+
+}
+
+/* INPUT */
+
+function toggleVoiceInput(){
+
+ const SpeechRecognition=
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+ if(!SpeechRecognition){
+  alert(t("voiceUnsupported"));
+  return;
+ }
+
+ if(voiceRecognition){
+  voiceRecognition.stop();
+  return;
+ }
+
+ const recognition=new SpeechRecognition();
+ const language=getLanguage();
+
+ recognition.lang=
+  language==="ru" ? "ru-RU" :
+  language==="en" ? "en-US" :
+  "hy-AM";
+
+ recognition.continuous=false;
+ recognition.interimResults=false;
+ voiceRecognition=recognition;
+ voiceButton.classList.add("recording");
+
+ recognition.onresult=(event)=>{
+  const transcript=event.results[0][0].transcript.trim();
+
+  if(transcript){
+   input.value=
+    (input.value.trim() ? input.value.trim()+" " : "")+
+    transcript;
+
+   resizeInput(input);
+  }
+ };
+
+ recognition.onerror=(event)=>{
+  if(event.error!=="aborted"){
+   alert(t("voiceError"));
+  }
+ };
+
+ recognition.onend=()=>{
+  voiceButton.classList.remove("recording");
+  voiceRecognition=null;
+
+  if(focusEnabled){
+   input.focus();
+  }
+ };
+
+ try{
+  recognition.start();
+ }catch(error){
+  voiceButton.classList.remove("recording");
+  voiceRecognition=null;
+  alert(t("voiceError"));
+ }
+}
+
+function resizeInput(el){
+
+ el.style.height="auto";
+
+ el.style.height=
+  Math.min(el.scrollHeight,150)+"px";
+
+}
+
+function handleKey(e){
+
+ if(
+  e.key==="Enter" &&
+  !e.shiftKey
+ ){
+
+  e.preventDefault();
+
+  sendMessage();
+
+ }
+
+}
+
+/* QUICK */
+
+function quick(text){
+
+ input.value=text;
+
+ resizeInput(input);
+
+ sendMessage();
+
+}
+
+/* MESSAGE */
+
+function addMessage(text,type,imageUrl=null,fileName=null,historyText=null){
+
+ welcome.style.display="none";
+
+ const row=document.createElement("div");
+
+ row.className="message "+type;
+
+ const bubble=document.createElement("div");
+
+ bubble.className="bubble";
+
+ if(imageUrl){
+  const image=document.createElement("img");
+  image.className="bubble-image";
+  image.src=imageUrl;
+  image.alt=t("attachMenuImage");
+  bubble.appendChild(image);
+ }
+
+ if(fileName){
+  const fileLabel=document.createElement("div");
+  fileLabel.className="image-preview-name";
+  fileLabel.textContent="📄 "+fileName;
+  bubble.appendChild(fileLabel);
+ }
+
+ const textNode=document.createElement("span");
+ textNode.textContent=String(text);
+ bubble.appendChild(textNode);
+
+ row.appendChild(bubble);
+
+ messages.appendChild(row);
+
+ addToCurrentHistory(
+  historyText || text,
+  type
+ );
+
+ scrollBottom();
+
+}
+
+/* SCROLL */
+
+function scrollBottom(){
+
+ const chat=document.getElementById("chat");
+
+ setTimeout(()=>{
+  chat.scrollTop=chat.scrollHeight;
+ },30);
+
+}
+
+/* SEND */
+
+async function sendMessage(){
+
+ const typedText=input.value.trim();
+ const wantsImageGeneration=imageGenerationMode;
+ const imageForRequest=selectedImageData;
+ const filesForRequest=selectedFilePayloads.slice();
+ const hasImage=!!imageForRequest;
+ const hasFiles=filesForRequest.length>0;
+ const fileNames=filesForRequest.map(file=>file.name).join(", ");
+
+ if(wantsImageGeneration && (hasImage || hasFiles)){
+  alert(t("removeAttachmentFirst"));
+  imageGenerationMode=false;
+  input.placeholder=t("inputPlaceholder");
+  return;
+ }
+
+ if(wantsImageGeneration && !typedText)return;
+ if(!typedText && !hasImage && !hasFiles)return;
+
+ const text=typedText || t(hasImage ? "imageDefaultPrompt" : "fileDefaultPrompt");
+
+ if(wantsImageGeneration && !window.confirm(t("imageCostConfirm"))){
+  imageGenerationMode=false;
+  input.placeholder=t("inputPlaceholder");
+  return;
+ }
+
+ imageGenerationMode=false;
+ input.placeholder=t("inputPlaceholder");
+
+ const historyText=
+  (hasImage ? "🖼️ " : (hasFiles ? "📄 "+fileNames+"\n" : ""))+
+  text;
+
+ if(!currentChatId){
+  createHistory(text);
+ }
+
+ addMessage(
+  text,
+  "user",
+  imageForRequest || null,
+  hasFiles ? fileNames : null,
+  historyText
+ );
+ removeSelectedImage();
+ closeAttachmentMenu();
+
+ input.value="";
+
+ input.style.height="42px";
+
+ if(typingEnabled){
+  typing.classList.add("show");
+ }
+
+ try{
+
+  const requestBody=wantsImageGeneration
+   ? {prompt:text}
+   : {
+      message:text,
+      image:imageForRequest,
+      files:filesForRequest,
+      settings:{
+       model:document.getElementById("model").value,
+       style:document.getElementById("style").value,
+       length:document.getElementById("length").value,
+       web_search:searchEnabled
+      }
+     };
+
+  const response=await fetch(
+   wantsImageGeneration ? "/generate-image" : "/chat",
+   {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(requestBody)
+   }
+  );
+
+  const data=await response.json();
+
+  if(!response.ok){
+   const serverError=new Error(data.error || t("couldNotAnswer"));
+   serverError.isServerError=true;
+   throw serverError;
+  }
+
+  typing.classList.remove("show");
+
+  if(wantsImageGeneration){
+   if(!data.image)throw new Error(t("couldNotAnswer"));
+   addMessage(t("generatedImageReady"),"ai",data.image);
+  }else{
+   const answer=
+    data.reply ??
+    data.response ??
+    data.message ??
+    data.answer ??
+    data.text ??
+    data.error ??
+    t("couldNotAnswer");
+
+   addMessage(answer,"ai");
+  }
+
+ }catch(error){
+
+  console.error(error);
+
+  typing.classList.remove("show");
+
+  addMessage(
+   error.isServerError && error.message
+    ? error.message
+    : t("connectionError"),
+   "ai"
+  );
+
+ }
+
+ if(focusEnabled){
+  input.focus();
+ }
+
+}
+
+/* NEW CHAT */
+
+function newChat(){
+
+ currentChatId=null;
+
+ messages.innerHTML="";
+
+ welcome.style.display="block";
+
+ input.value="";
+
+ input.style.height="42px";
+ imageGenerationMode=false;
+ input.placeholder=t("inputPlaceholder");
+
+ removeSelectedImage();
+ closeAttachmentMenu();
+
+ closeMobileMenu();
+
+ if(focusEnabled){
+  input.focus();
+ }
+
+}
+
+/* RESET SETTINGS */
+
+function resetSettings(){
+
+ localStorage.removeItem("miniDark");
+ localStorage.removeItem("miniAnimations");
+ localStorage.removeItem("miniEffects");
+ localStorage.removeItem("miniSearch");
+ localStorage.removeItem("miniFocus");
+ localStorage.removeItem("miniTyping");
+ localStorage.removeItem("miniSound");
+ localStorage.removeItem("miniAccent");
+ localStorage.removeItem("miniAccent2");
+
+ location.reload();
+
+}
+
+/* MOBILE SWIPE MENU */
+
+const sidebar=
+ document.getElementById("sidebar");
+
+const mobileBackdrop=
+ document.getElementById("mobileMenuBackdrop");
+
+let touchStartX=0;
+let touchStartY=0;
+let touchCurrentX=0;
+
+function openMobileMenu(){
+
+ if(window.innerWidth>760)return;
+
+ sidebar.classList.add("open");
+
+ mobileBackdrop.classList.add("show");
+
+}
+
+function closeMobileMenu(){
+
+ sidebar.classList.remove("open");
+
+ mobileBackdrop.classList.remove("show");
+
+}
+
+mobileBackdrop.addEventListener(
+ "click",
+ closeMobileMenu
 );
 
-/* ---------- ACCOUNTS (saved in this browser only) ---------- */
-function getUsers() {
-  try { return JSON.parse(store.get("mini_users") || "{}"); } catch(e) { return {}; }
-}
+document.addEventListener(
+ "touchstart",
+ function(e){
 
-async function hash(text) {
-  if (window.crypto && crypto.subtle) {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("mini.ai:" + text));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
-  }
-  let h = 0;
-  for (const c of "mini.ai:" + text) h = (h * 31 + c.charCodeAt(0)) | 0;
-  return String(h);
-}
+  if(window.innerWidth>760)return;
 
-function renderAccount() {
-  const box = $("accountBox");
-  box.innerHTML = "";
-  if (currentUser) {
-    const hello = document.createElement("div");
-    hello.className = "hello";
-    hello.textContent = t("hello") + currentUser;
-    const out = document.createElement("button");
-    out.className = "secondary";
-    out.textContent = t("logout");
-    out.onclick = logout;
-    box.append(hello, out);
-    $("userLabel").textContent = "👤 " + currentUser;
-  } else {
-    const hello = document.createElement("div");
-    hello.className = "hello";
-    hello.textContent = t("guest");
-    const row = document.createElement("div");
-    row.className = "row";
-    const a = document.createElement("button");
-    a.className = "primary"; a.textContent = t("login");
-    a.onclick = () => openAuth("login");
-    const b = document.createElement("button");
-    b.className = "secondary"; b.textContent = t("signup");
-    b.onclick = () => openAuth("signup");
-    row.append(a, b);
-    box.append(hello, row);
-    $("userLabel").textContent = "";
-  }
-}
+  touchStartX=
+   e.touches[0].clientX;
 
-function setMode(mode) {
-  authMode = mode;
-  $("tabLogin").classList.toggle("on", mode === "login");
-  $("tabSignup").classList.toggle("on", mode === "signup");
-  $("authTitle").textContent = t(mode);
-  $("authSubmit").textContent = t(mode);
-  $("authPass").autocomplete = mode === "signup" ? "new-password" : "current-password";
-  $("authErr").textContent = "";
-}
+  touchStartY=
+   e.touches[0].clientY;
 
-function openAuth(mode) {
-  closeModal("settings");
-  $("authUser").value = ""; $("authPass").value = "";
-  setMode(mode);
-  openModal("auth");
-  $("authUser").focus();
-}
+  touchCurrentX=
+   touchStartX;
 
-async function submitAuth() {
-  const name = $("authUser").value.trim();
-  const pass = $("authPass").value;
-  const err = $("authErr");
-  if (!name || !pass) { err.textContent = t("errEmpty"); return; }
+ },
+ {passive:true}
+);
 
-  const users = getUsers();
-  const key = name.toLowerCase();
+document.addEventListener(
+ "touchmove",
+ function(e){
 
-  if (authMode === "signup") {
-    if (pass.length < 4) { err.textContent = t("errShort"); return; }
-    if (users[key]) { err.textContent = t("errTaken"); return; }
-    users[key] = { name: name, pass: await hash(pass) };
-    store.set("mini_users", JSON.stringify(users));
-  } else {
-    if (!users[key] || users[key].pass !== await hash(pass)) { err.textContent = t("errBad"); return; }
+  if(window.innerWidth>760)return;
+
+  touchCurrentX=
+   e.touches[0].clientX;
+
+ },
+ {passive:true}
+);
+
+document.addEventListener(
+ "touchend",
+ function(e){
+
+  if(window.innerWidth>760)return;
+
+  const deltaX=
+   e.changedTouches[0].clientX -
+   touchStartX;
+
+  const deltaY=
+   Math.abs(
+    e.changedTouches[0].clientY -
+    touchStartY
+   );
+
+  /* LEFT EDGE → RIGHT */
+
+  if(
+   touchStartX<45 &&
+   deltaX>70 &&
+   deltaX>deltaY
+  ){
+
+   openMobileMenu();
+
   }
 
-  currentUser = users[key].name;
-  store.set("mini_current", currentUser);
-  closeModal("auth");
-  renderAccount();
-  loadChats();
-  newChat();
-}
+  /* RIGHT → LEFT */
 
-function logout() {
-  currentUser = null;
-  store.del("mini_current");
-  renderAccount();
-  loadChats();
-  newChat();
-}
+  else if(
+   sidebar.classList.contains("open") &&
+   deltaX<-70 &&
+   Math.abs(deltaX)>deltaY
+  ){
 
-/* ---------- CHAT HISTORY (each account has its own list) ---------- */
-function chatKey() { return "mini_chats_" + (currentUser ? currentUser.toLowerCase() : "guest"); }
+   closeMobileMenu();
 
-function loadChats() {
-  try { chats = JSON.parse(store.get(chatKey()) || "[]"); } catch(e) { chats = []; }
-}
-function saveChats() { store.set(chatKey(), JSON.stringify(chats)); }
-
-function renderHistory() {
-  const box = $("history");
-  box.innerHTML = "";
-  if (!chats.length) {
-    const e = document.createElement("div");
-    e.className = "empty";
-    e.textContent = t("empty");
-    box.append(e);
-    return;
-  }
-  chats.forEach(c => {
-    const row = document.createElement("div");
-    row.className = "h-item" + (c.id === curId ? " on" : "");
-    const b = document.createElement("button");
-    b.className = "h-title";
-    b.textContent = c.title;
-    b.onclick = () => openChat(c.id);
-    const d = document.createElement("button");
-    d.className = "h-del";
-    d.textContent = "🗑";
-    d.title = t("del");
-    d.setAttribute("aria-label", t("del"));
-    d.onclick = () => deleteChat(c.id);
-    row.append(b, d);
-    box.append(row);
-  });
-}
-
-function clearMessages() {
-  document.querySelectorAll(".message").forEach(m => m.remove());
-  const w = $("welcome");
-  if (w) w.remove();
-}
-
-function showMsg(m) {
-  const el = document.createElement("div");
-  el.className = "message " + (m.r === "user" ? "user" : "ai");
-  el.textContent = m.text;
-  $("chat").appendChild(el);
-  $("chat").scrollTop = $("chat").scrollHeight;
-}
-
-function openChat(id) {
-  const c = chats.find(x => x.id === id);
-  if (!c) return;
-  curId = id;
-  clearMessages();
-  c.msgs.forEach(showMsg);
-  renderHistory();
-}
-
-function deleteChat(id) {
-  chats = chats.filter(x => x.id !== id);
-  saveChats();
-  if (id === curId) newChat(); else renderHistory();
-}
-
-function newChat() {
-  curId = null;
-  clearMessages();
-  const w = document.createElement("div");
-  w.className = "welcome"; w.id = "welcome";
-  w.innerHTML = '<h1 data-i="welcomeH"></h1><p data-i="welcomeP"></p>';
-  $("chat").appendChild(w);
-  applyLang();
-}
-
-/* ---------- OLLAMA SETTINGS ---------- */
-const OLLAMA_URL   = "/chat";
-const OLLAMA_MODEL = "hf.co/ArmGPT/ArmenianGPT-1.0-3B:Q4_K_M";
-
-const SYSTEM_PROMPT =
-  "You are Mini.AI, a friendly assistant. " +
-  "Always answer in the language the user writes in. " +
-  "If the user writes Armenian using Latin letters, answer in Armenian letters. " +
-  "If the user writes Russian using Latin letters, answer in Russian Cyrillic. " +
-  "Keep answers clear, natural, and short. " +
-  "Do not use Markdown math, LaTeX, $$, \\boxed{}, or mathematical formatting unless the user specifically asks for it. " +
-  "For normal conversation, answer with plain text only.";
-
-const ERR = {
-  hy: "⚠️ Չհաջողվեց կապվել Ollama-ի հետ։ Համոզվիր, որ Ollama-ն միացված է և մոդելի անունը ճիշտ է։",
-  en: "⚠️ Could not reach Ollama. Make sure Ollama is running and the model name is correct.",
-  ru: "⚠️ Не удалось подключиться к Ollama. Проверь, что Ollama запущена и имя модели верное."
-};
-
-let busy = false;
-
-/* ---------- ASK OLLAMA ---------- */
-async function getAIReply(history) {
-  try {
-    const lastMessage = history[history.length - 1];
-
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: lastMessage.content
-      })
-    });
-
-    if (!res.ok) {
-      throw new Error("HTTP " + res.status);
-    }
-
-    const data = await res.json();
-
-    return {
-      ok: true,
-      text: data.reply
-    };
-
-  } catch (e) {
-    console.error("Mini.AI error:", e);
-
-    return {
-      ok: false,
-      text: ERR[lang]
-    };
-  }
-}
-/* ---------- SEND ---------- */
-async function sendMessage() {
-  const input = $("messageInput");
-  const text = input.value.trim();
-  if (text === "" || busy) return;
-  if ($("welcome")) $("welcome").remove();
-  input.value = "";
-
-  let c = chats.find(x => x.id === curId);
-  if (!c) {
-    c = { id: Date.now(), title: text.slice(0, 28), msgs: [] };
-    chats.unshift(c);
-    curId = c.id;
   }
 
-  const um = { r: "user", text: text };
-  c.msgs.push(um);
-  saveChats();
-  showMsg(um);
-  renderHistory();
+ },
+ {passive:true}
+);
 
-  busy = true;
-  const wait = document.createElement("div");
-  wait.className = "message ai";
-  wait.textContent = "…";
-  $("chat").appendChild(wait);
-  $("chat").scrollTop = $("chat").scrollHeight;
+/* ESCAPE CLOSE */
 
-  const history = c.msgs.slice(-20).map(m => ({
-    role: m.r === "user" ? "user" : "assistant",
-    content: m.text
-  }));
-  const r = await getAIReply(history);
+document.addEventListener(
+ "keydown",
+ function(e){
 
-  if (c.id === curId) wait.textContent = r.text; else wait.remove();
-  if (r.ok) {
-    c.msgs.push({ r: "ai", text: r.text });
-    saveChats();
+  if(e.key==="Escape"){
+   closeMobileMenu();
+   closeAttachmentMenu();
+   if(voiceRecognition)voiceRecognition.stop();
   }
-  busy = false;
-  $("chat").scrollTop = $("chat").scrollHeight;
+
+ }
+);
+
+/* LOAD */
+
+function loadSettings(){
+
+ document.body.classList.toggle(
+  "light",
+  !darkMode
+ );
+
+ document.body.classList.toggle(
+  "no-animations",
+  !animations
+ );
+
+ document.body.classList.toggle(
+  "no-effects",
+  !effects
+ );
+
+ document
+  .getElementById("darkToggle")
+  .classList.toggle(
+   "active",
+   darkMode
+  );
+
+ document
+  .getElementById("animationToggle")
+  .classList.toggle(
+   "active",
+   animations
+  );
+
+ document
+  .getElementById("effectsToggle")
+  .classList.toggle(
+   "active",
+   effects
+  );
+
+ document
+  .getElementById("searchToggle")
+  .classList.toggle(
+   "active",
+   searchEnabled
+  );
+
+ document
+  .getElementById("focusToggle")
+  .classList.toggle(
+   "active",
+   focusEnabled
+  );
+
+ document
+  .getElementById("typingToggle")
+  .classList.toggle(
+   "active",
+   typingEnabled
+  );
+
+ const a=
+  localStorage.getItem("miniAccent");
+
+ const b=
+  localStorage.getItem("miniAccent2");
+
+ if(a&&b){
+
+  document.documentElement
+   .style
+   .setProperty(
+    "--accent",
+    a
+   );
+
+  document.documentElement
+   .style
+   .setProperty(
+    "--accent2",
+    b
+   );
+
+ }
+
+ const savedLanguage=
+  localStorage.getItem("miniLanguage") || "hy";
+
+ document
+  .getElementById("language")
+  .value=savedLanguage;
+
+ document
+  .getElementById("language")
+  .addEventListener(
+   "change",
+   changeLanguage
+  );
+
+ applyLanguage();
+
+ renderHistory();
+
 }
 
-function handleKey(e) { if (e.key === "Enter") sendMessage(); }
+loadSettings();
 
-/* ---------- START ---------- */
-applyTheme(store.get("mini_theme") === "light");
-loadChats();
-applyLang();
+if(focusEnabled){
+ input.focus();
+}
+
 </script>
 
 </body>
