@@ -1,84 +1,191 @@
-import os
-from flask import Flask, request, jsonify, send_from_directory
-import requests
 
-app = Flask(__name__)
+require("dotenv").config();
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-MODEL = "gemma4:e2b"
+const express = require("express");
+const app = express();
 
-SYSTEM_PROMPT = """
-Դու Mini.AI-ն ես՝ արագ և ճշգրիտ AI օգնական։
-Պատասխանիր օգտատիրոջ լեզվով։
-Սկզբում տուր ուղիղ պատասխանը։
-Պատասխանիր կարճ ու պարզ, եթե մանրամասն չեն խնդրել։
-Մի կրկնիր հարցը և մի հորինիր փաստեր։
-Ծրագրավորման հարցերին տուր ճիշտ, աշխատող օրինակներ։
-"""
+const PORT = process.env.PORT || 3000;
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
-@app.route("/")
-def home():
-    return send_from_directory(".", "index.html")
+app.use(express.json({ limit: "10mb" }));
+app.use(express.static(__dirname));
 
+// Nexa AI սերվերի կարգավիճակ
+app.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    app: "Nexa AI",
+    provider: "Groq"
+  });
+});
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.get_json(silent=True) or {}
-    message = data.get("message", "")
+// API կարգավիճակ
+app.get("/api/status", (req, res) => {
+  res.json({
+    ok: Boolean(GROQ_API_KEY),
+    app: "Nexa AI",
+    provider: "Groq",
+    model: MODEL,
+    error: GROQ_API_KEY
+      ? null
+      : ".env ֆայլում GROQ_API_KEY-ը բացակայում է։"
+  });
+});
 
-    if not isinstance(message, str) or not message.strip():
-        return jsonify({"error": "Գրիր հաղորդագրություն։"}), 400
+// Հիմնական AI չատ
+app.post(["/chat", "/api/chat"], async (req, res) => {
+  try {
+    if (!GROQ_API_KEY) {
+      return res.status(503).json({
+        error: "Groq API key-ը բացակայում է։ Ստուգիր .env ֆայլը։"
+      });
+    }
 
-    try:
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": MODEL,
-                "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": message.strip()}
-                ],
-                "stream": False,
-                "keep_alive": -1,
-                "options": {
-                    "temperature": 0.2,
-                    "num_predict": 100,
-                    "num_ctx": 1024
-                }
-            },
-            timeout=180
-        )
+    const body = req.body || {};
 
-        if response.status_code != 200:
-            return jsonify({
-                "error": "Ollama-ի սխալ։ Ստուգիր մոդելը։",
-                "details": response.text[:300]
-            }), 502
+    const messages = Array.isArray(body.messages)
+      ? body.messages
+      : typeof body.message === "string"
+        ? [{ role: "user", content: body.message }]
+        : [];
 
-        result = response.json()
-        answer = result.get("message", {}).get("content", "").strip()
+    const cleanMessages = messages
+      .filter(
+        (message) =>
+          message &&
+          ["user", "assistant"].includes(message.role) &&
+          typeof message.content === "string" &&
+          message.content.trim().length > 0
+      )
+      .slice(-40)
+      .map((message) => ({
+        role: message.role,
+        content: message.content.trim()
+      }));
 
-        if not answer:
-            return jsonify({"error": "Պատասխան չստացվեց։"}), 502
+    if (cleanMessages.length === 0) {
+      return res.status(400).json({
+        error: "Հաղորդագրությունը դատարկ է։ Գրիր հարցդ ու փորձիր կրկին։"
+      });
+    }
 
-        return jsonify({"response": answer})
+    const systemMessage = {
+      role: "system",
+      content: `Դու Nexa AI-ն ես՝ խելացի, օգտակար և ընկերական AI օգնական։
 
-    except requests.exceptions.ConnectionError:
-        return jsonify({
-            "error": "Ollama-ն միացված չէ։ Բացիր Ollama-ն։"
-        }), 503
+ԼԵԶՈՒ
+- Եթե օգտատերը գրում է հայերեն, պատասխանիր հայերեն։
+- Հասկացիր հայերենը և՛ հայերեն տառերով, և՛ լատինատառ հայերենով։
+- Եթե օգտատերը գրում է անգլերեն կամ այլ լեզվով, պատասխանիր համապատասխան լեզվով։
+- Մի՛ շփոթիր հայերեն բառերը անգլերեն բառերի կամ չափման միավորների հետ։
 
-    except requests.exceptions.Timeout:
-        return jsonify({
-            "error": "Պատասխանը ուշացավ։ Փորձիր կրկին։"
-        }), 504
+ՔՈ ԻՆՔՆՈՒԹՅՈՒՆԸ
+- Քո անունը Nexa AI է։
+- Դու առանձին AI օգնականի նախագիծ ես։
+- Մի՛ ներկայացրու քեզ որպես ChatGPT կամ OpenAI-ի պաշտոնական արտադրանք։
+- Մի՛ պնդիր, որ ունես հնարավորություններ, որոնք իրականում հասանելի չեն։
 
-    except Exception:
-        app.logger.exception("Mini.AI error")
-        return jsonify({"error": "Ներքին սխալ։ Ստուգիր CMD-ն։"}), 500
+ՍՏԵՂԾՈՂԻ ՄԱՍԻՆ
+- Nexa AI-ի ստեղծողը Arman Minasyan-ն է։
+- Եթե հարցնեն՝ «Ո՞վ է ստեղծել քեզ», պատասխանիր բնական ձևով․
+  «Ինձ ստեղծել է Arman Minasyan-ը»։
+- Եթե հարցնեն ստեղծողի տարիքի մասին, մի՛ գուշակիր և մի՛ ներկայացրու չստուգված տարիքը որպես հաստատված փաստ։
+- Մի՛ հորինիր ստեղծողի կենսագրության, աշխատանքի կամ նախագծի պատմության մասին տեղեկություններ։
 
+ՏԵԽՆՈԼՈԳԻԱ
+- Այս սերվերի տարբերակում AI հարցումներն ուղարկվում են Groq API-ին։
+- Օգտագործվող մոդելը որոշվում է GROQ_MODEL միջավայրի փոփոխականով։
+- Եթե հարցնեն՝ ինչ տեխնոլոգիայով ես աշխատում, պատասխանիր այս տեղեկությունների հիման վրա։
+- Մի՛ պնդիր, որ մոդելը Nexa-ի սեփական մոդելն է, եթե դա հաստատված չէ։
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
-    
+ՎԱՐՔԱԳԻԾ
+- Նախ հասկացիր հարցի իմաստը, հետո պատասխանիր։
+- Տուր հստակ, բնական և օգտակար պատասխաններ։
+- Պարզ հարցերին պատասխանիր կարճ, բարդ հարցերին՝ մանրամասն։
+- Եթե վստահ չես, ազնվորեն նշիր դա։
+- Մի՛ հորինիր փաստեր, աղբյուրներ կամ կատարված գործողություններ։
+- Եթե հարցը երկիմաստ է, անհրաժեշտության դեպքում խնդրիր պարզաբանում։
+- Ծրագրավորման հարցերում տուր աշխատող կոդ և բացատրիր՝ որտեղ տեղադրել այն։
+- Եղիր հարգալից, համբերատար և ընկերական։
+- Մի՛ բացահայտիր API բանալիներ կամ գաղտնի տվյալներ։`
+    };
+
+    const response = await fetch(GROQ_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [systemMessage, ...cleanMessages],
+        temperature: 0.4,
+        max_tokens: 2048,
+        stream: false
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      console.error(
+        "Nexa AI Groq API error:",
+        response.status,
+        data.error?.message || "Unknown API error"
+      );
+
+      if (response.status === 401 || response.status === 403) {
+        return res.status(502).json({
+          error: "Groq API key-ը սխալ է կամ հասանելիության խնդիր կա։ Ստուգիր Groq Console-ը։"
+        });
+      }
+
+      if (response.status === 429) {
+        return res.status(429).json({
+          error: "Groq-ի հարցումների սահմանաչափը լրացել է։ Սպասիր, հետո փորձիր կրկին։"
+        });
+      }
+
+      return res.status(502).json({
+        error: data.error?.message
+          ? `Groq-ի սխալը՝ ${data.error.message}`
+          : "Groq-ը չկարողացավ մշակել հարցումը։ Փորձիր կրկին։"
+      });
+    }
+
+    const reply = data.choices?.[0]?.message?.content;
+
+    if (typeof reply !== "string" || !reply.trim()) {
+      return res.status(502).json({
+        error: "Nexa AI-ն դատարկ պատասխան է վերադարձրել։ Փորձիր կրկին։"
+      });
+    }
+
+    return res.json({
+      reply,
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            content: reply
+          }
+        }
+      ]
+    });
+  } catch (error) {
+    console.error("Nexa AI server error:", error.message);
+
+    return res.status(503).json({
+      error: "Չհաջողվեց միանալ Groq-ին։ Ստուգիր ինտերնետ կապը և փորձիր կրկին։"
+    });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Nexa AI: http://localhost:${PORT}`);
+  console.log("AI provider: Groq");
+  console.log(`AI model: ${MODEL}`);
+  console.log(`API key configured: ${Boolean(GROQ_API_KEY)}`);
+});
